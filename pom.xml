@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>uk.co.hopperelec.mc</groupId>
+    <artifactId>HopperBot</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>HopperBotJDA</name>
+    <description>HopperBot redesigned in JDA</description>
+
+    <properties>
+        <java.version>16</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>apache.snapshots</id>
+            <url>https://repository.apache.org/snapshots/</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <defaultGoal>clean package</defaultGoal>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.1-SNAPSHOT</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/NOTICE</exclude>
+                                        <exclude>META-INF/LICENSE</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>ch.qos.logback:logback-core:</artifact>
+                                    <excludeDefaults>false</excludeDefaults>
+                                    <includes>
+                                        <include>ch/qos/logback/core/FileAppender</include>
+                                        <include>ch/qos/logback/core/ConsoleAppender.class</include>
+                                    </includes>
+                                </filter>
+                                <filter>
+                                    <artifact>mysql:mysql-connector-java:</artifact>
+                                    <excludeDefaults>false</excludeDefaults>
+                                    <includes>
+                                        <include>com/mysql/cj/conf/url/SingleConnectionUrl</include>
+                                    </includes>
+                                </filter>
+                            </filters>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <manifestEntries>
+                                        <Built-By>hopperelec</Built-By>
+                                        <Main-Class>uk.co.hopperelec.HopperBot.HopperBot</Main-Class>
+                                        <X-Compile-Source-JDK>${java.version}</X-Compile-Source-JDK>
+                                        <X-Compile-Target-JDK>${java.version}</X-Compile-Target-JDK>
+                                    </manifestEntries>
+                                </transformer>
+                            </transformers>
+                            <minimizeJar>true</minimizeJar>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
+    </build>
+
+    <repositories>
+        <repository>
+            <id>marian</id>
+            <name>m5rian-java</name>
+            <url>https://m5rian.jfrog.io/artifactory/java</url>
+        </repository>
+        <repository>
+            <id>dv8tion</id>
+            <name>m2-dv8tion</name>
+            <url>https://m2.dv8tion.net/releases</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.dv8tion</groupId>
+            <artifactId>JDA</artifactId>
+            <version>5.0.0-alpha.9</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.2.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.13.2.2</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+            <version>2.13.2</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.28</version>
+        </dependency>
+    </dependencies>
+</project>

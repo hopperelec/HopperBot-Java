@@ -4,9 +4,11 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.Command;
 import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
+import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 
@@ -82,31 +84,36 @@ public class HopperBotCommandHandler extends ListenerAdapter {
 
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
-        CommandListUpdateAction commandListUpdateAction = event.getGuild().updateCommands();
-        final Map<String, Collection<CommandPrivilege>> commandPrivilegeNames = new HashMap<>();
-        for (HopperBotCommandFeature feature : features) {
-            final HopperBotServerConfig serverConfig = getUtils().config().getServerConfig(event.getGuild().getIdLong());
-            if (serverConfig.usesFeature(feature.featureEnum)) {
-                feature.guilds.add(event.getGuild());
-                for (HopperBotCommand command : feature.commands) {
-                    commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
-                    commandPrivilegeNames.put(command.name,command.privileges);
-                }
-                Set<HopperBotCommand> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
-                if (extraCommands != null) {
-                    for (HopperBotCommand command : extraCommands) {
+        final HopperBotServerConfig serverConfig = getUtils().config().getServerConfig(event.getGuild().getIdLong());
+        if (serverConfig != null) {
+            CommandListUpdateAction commandListUpdateAction = event.getGuild().updateCommands();
+            final Map<String, Collection<CommandPrivilege>> commandPrivilegeNames = new HashMap<>();
+            for (HopperBotCommandFeature feature : features) {
+                if (serverConfig.usesFeature(feature.featureEnum)) {
+                    feature.guilds.add(event.getGuild());
+                    for (HopperBotCommand command : feature.commands) {
                         commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
                         commandPrivilegeNames.put(command.name,command.privileges);
                     }
+                    Set<HopperBotCommand> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
+                    if (extraCommands != null) {
+                        for (HopperBotCommand command : extraCommands) {
+                            commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
+                            commandPrivilegeNames.put(command.name,command.privileges);
+                        }
+                    }
                 }
             }
+            commandListUpdateAction.queue(commands -> {
+                Map<String, Collection<CommandPrivilege>> commandPrivilegeIDs = new HashMap<>();
+                for (Command command : commands) {
+                    commandPrivilegeIDs.put(command.getId(),commandPrivilegeNames.get(command.getName()));
+                }
+                event.getGuild().updateCommandPrivileges(commandPrivilegeIDs).queue();
+            }, new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, error -> {
+                getUtils().log("Missing Oauth2 scope 'applications.commands' which is needed to be able to add slash commands to the server. Re-invite the bot using this link: "+
+                        "https://discord.com/api/oauth2/authorize?client_id=769709648092856331&scope=bot%20applications.commands&permissions=8", event.getGuild(),null);
+            }));
         }
-        commandListUpdateAction.queue(commands -> {
-            Map<String, Collection<CommandPrivilege>> commandPrivilegeIDs = new HashMap<>();
-            for (Command command : commands) {
-                commandPrivilegeIDs.put(command.getId(),commandPrivilegeNames.get(command.getName()));
-            }
-            event.getGuild().updateCommandPrivileges(commandPrivilegeIDs).queue();
-        });
     }
 }

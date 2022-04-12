@@ -1,0 +1,52 @@
+enabled_features:
+  - log_command
+  - purge
+  - autoVCGen
+  - poll
+  - info
+  - economy
+  - playlist
+  - alchemy
+  - leave_messages
+  - server_list
+log_format: '{feature}: {message}'
+
+servers:
+  847254345267281960:
+    name: hopperelec
+    invite: zCdEKf9YbG
+    log_channel: 847261620206960651
+    extra_features:
+      - log_command
+      - purge
+      - autoVCGen
+      - poll
+      - info
+      - economy
+      - playlist
+      - alchemy
+      - leave_messages
+    feature_configs:
+      playlist:
+        voice_channel: 847259922822856705
+        commands_channel: 847259901281173534
+      autoVCGen:
+        channel_names: ['Off Topic','StockBlock']
+      info:
+        youtube: 'https://yt.hopperelec.co.uk/'
+      alchemy:
+        commands_channel: 849274424774754324
+        suggestions_channel: 849268967347585074
+      economy:
+        commands_channel: 847259886290206730
+        defaultCash: 10
+        defaultBank: 1440
+        defaultItems: []
+        addons:
+          - message_rewards
+        addon_configs:
+          message_rewards:
+            channels: [847260412922953739,847260532826439700,847262054032080916,847259998971101194]
+      leave_messages:
+        channel: 847255472745611364
+        format: '{name}#{discriminator} ({id}) has left the server!'

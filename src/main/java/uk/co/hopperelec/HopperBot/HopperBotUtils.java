@@ -19,17 +19,20 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
 
     public void logToGuild(String message, Guild guild) {
         final HopperBotServerConfig guildConfig = config.getServerConfig(guild.getIdLong());
-        final long channelId = guildConfig.getLogChannel();
-        final TextChannel logChannel = guild.getTextChannelById(channelId);
-        if (logChannel == null) {
-            logger.error("The log channel for {} ({}) could not be found!", guildConfig.getName(), channelId);
-        } else {
-            logChannel.sendMessage(message).queue();
+        if (guildConfig != null) {
+            final long channelId = guildConfig.getLogChannel();
+            final TextChannel logChannel = guild.getTextChannelById(channelId);
+            if (logChannel == null) {
+                logger.error("The log channel for {} ({}) could not be found!", guildConfig.getName(), channelId);
+            } else {
+                logChannel.sendMessage(message).queue();
+            }
         }
     }
 
     public void log(String message, Guild guild, HopperBotFeatures hopperBotFeature) {
-        message = config.getLogFormat().replaceAll("\\{message}", message).replaceAll("\\{feature}", hopperBotFeature.name());
+        final String featureName = hopperBotFeature == null ? "main" : hopperBotFeature.name();
+        message = config.getLogFormat().replaceAll("\\{message}", message).replaceAll("\\{feature}", featureName);
         logger.info(message);
         if (guild == null) {
             for (Guild guildIter : jda.getGuilds()) {
@@ -41,7 +44,11 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     }
 
     public Map<String, JsonNode> getFeatureConfig(Guild guild, HopperBotFeatures feature) {
-        return config().getServerConfig(guild.getIdLong()).getFeatureConfig(feature);
+        HopperBotServerConfig serverConfig = config().getServerConfig(guild.getIdLong());
+        if (serverConfig != null) {
+            return serverConfig.getFeatureConfig(feature);
+        }
+        return null;
     }
 
     public EmbedBuilder getEmbedBase() {

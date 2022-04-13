@@ -1,6 +1,6 @@
-package uk.co.hopperelec.hopperbot.Features.Economy;
+package uk.co.hopperelec.hopperbot.features.economy;
 
-import uk.co.hopperelec.hopperbot.Features.Economy.Addons.MMHM;
+import uk.co.hopperelec.hopperbot.features.economy.addons.MMHM;
 import uk.co.hopperelec.hopperbot.HopperBot;
 
 import java.lang.reflect.Constructor;

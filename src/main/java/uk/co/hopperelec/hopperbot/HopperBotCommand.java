@@ -10,27 +10,23 @@ import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import java.util.HashSet;
 import java.util.Set;
 
-import static java.util.Arrays.stream;
+import static java.util.Arrays.asList;
 
-public class HopperBotCommand {
+public abstract class HopperBotCommand {
     public final String name;
     public final String description;
     public final Set<String> aliases = new HashSet<>();
-    public final SlashCommandAction slashCommandAction;
-    public final TextCommandAction textCommandAction;
     public final CommandUsageFilter[] filters;
     public final SlashCommandData slashCommand;
     public final Set<CommandPrivilege> privileges = new HashSet<>();
 
-    public HopperBotCommand(String name, String description, String[] aliases, OptionData[] options, SlashCommandAction slashCommandAction, TextCommandAction textCommandAction, CommandUsageFilter... filters) {
+    public HopperBotCommand(String name, String description, String[] aliases, OptionData[] options, CommandUsageFilter... filters) {
         this.name = name;
         this.description = description;
         this.aliases.add(name);
         if (aliases != null) {
-            this.aliases.addAll(stream(aliases).toList());
+            this.aliases.addAll(asList(aliases));
         }
-        this.slashCommandAction = slashCommandAction;
-        this.textCommandAction = textCommandAction;
         this.filters = filters;
 
         this.slashCommand = Commands.slash(name,description);
@@ -47,10 +43,6 @@ public class HopperBotCommand {
         }
     }
 
-    public interface TextCommandAction {
-        void op(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils);
-    }
-    public interface SlashCommandAction {
-        void op(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils);
-    }
+    public abstract void textCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils);
+    public abstract void slashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils);
 }

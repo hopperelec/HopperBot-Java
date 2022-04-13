@@ -1,4 +1,4 @@
-package uk.co.hopperelec.hopperbot.Features.Economy;
+package uk.co.hopperelec.hopperbot.features.economy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;

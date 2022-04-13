@@ -1,4 +1,4 @@
-package uk.co.hopperelec.hopperbot.Features;
+package uk.co.hopperelec.hopperbot.features;
 
 import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;

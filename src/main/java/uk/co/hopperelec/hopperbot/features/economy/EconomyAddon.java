@@ -1,4 +1,4 @@
-package uk.co.hopperelec.hopperbot.Features.Economy;
+package uk.co.hopperelec.hopperbot.features.economy;
 
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;

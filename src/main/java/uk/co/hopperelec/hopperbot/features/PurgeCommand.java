@@ -1,14 +1,13 @@
-package uk.co.hopperelec.hopperbot.Features;
+package uk.co.hopperelec.hopperbot.features;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import uk.co.hopperelec.hopperbot.CommandUsageFilter;
-import uk.co.hopperelec.hopperbot.HopperBotCommand;
-import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
-import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.*;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -20,12 +19,9 @@ public final class PurgeCommand extends HopperBotCommandFeature {
         super(HopperBotFeatures.purge, "!",
             new HopperBotCommand("purge","Moderation command for deleting up to 500 messages in bulk",null,
                 new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete").setRequiredRange(1,500)},
-                (event,feature,utils) -> {
-                    OptionMapping option = event.getOption("limit");
-                    if (option != null) {
-                        ((PurgeCommand) feature).purgeMessages(event.getTextChannel(),option.getAsLong(),message -> event.reply(message).setEphemeral(true).queue());
-                    }
-                }, (event,content,feature,utils) -> {
+                CommandUsageFilter.has_manage_messages
+            ) {
+                public void textCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     if (event.getMember() != null && event.getMember().hasPermission(Permission.MESSAGE_MANAGE)) {
                         final String limitStr = content.replaceAll(" ", "");
                         if (limitStr.equals("")) {
@@ -51,8 +47,14 @@ public final class PurgeCommand extends HopperBotCommandFeature {
                             }
                         }
                     }
-                }, CommandUsageFilter.has_manage_messages
-            )
+                }
+                public void slashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    OptionMapping option = event.getOption("limit");
+                    if (option != null) {
+                        ((PurgeCommand) feature).purgeMessages(event.getTextChannel(),option.getAsLong(),message -> event.reply(message).setEphemeral(true).queue());
+                    }
+                }
+            }
         );
     }
 

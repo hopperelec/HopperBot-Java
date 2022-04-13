@@ -1,4 +1,4 @@
-package uk.co.hopperelec.hopperbot.Features;
+package uk.co.hopperelec.hopperbot.features;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import net.dv8tion.jda.api.entities.Guild;

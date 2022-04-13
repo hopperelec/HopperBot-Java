@@ -25,8 +25,8 @@ import java.util.Set;
 public final class HopperBot {
     public final static Logger logger = LoggerFactory.getLogger(HopperBot.class);
 
-    private static class HopperBotLoadingError extends Exception {
-        public HopperBotLoadingError(String message) {
+    private static class HopperBotLoadingException extends Exception {
+        public HopperBotLoadingException(String message) {
             super(message);
         }
     }
@@ -37,7 +37,7 @@ public final class HopperBot {
             try {
                 builder.setToken(Files.readString(Paths.get("token")));
             } catch (IOException e) {
-                throw new HopperBotLoadingError("'token' file must be created in the working directory");
+                throw new HopperBotLoadingException("'token' file must be created in the working directory");
             }
             logger.info("Retrieved token");
             builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);
@@ -48,13 +48,13 @@ public final class HopperBot {
             if (!configFile.exists() || configFile.isDirectory()) {
                 final InputStream configStream = HopperBot.class.getResourceAsStream("/config.yml");
                 if (configStream == null) {
-                    throw new HopperBotLoadingError("Failed to read default config from JAR!");
+                    throw new HopperBotLoadingException("Failed to read default config from JAR!");
                 }
                 try {
                     FileOutputStream outputStream = new FileOutputStream(configPath.toString());
                     outputStream.write(configStream.readAllBytes());
                 } catch (IOException e) {
-                    throw new HopperBotLoadingError("Failed to save default config!");
+                    throw new HopperBotLoadingException("Failed to save default config!");
                 }
                 logger.info("Created new config.yml");
             } else {
@@ -68,7 +68,7 @@ public final class HopperBot {
                 config = objectMapper.readValue(configFile, HopperBotConfig.class);
             } catch (IOException e) {
                 e.printStackTrace();
-                throw new HopperBotLoadingError("Failed to read config to uk.co.hopperelec.HopperBot.HopperBotConfig object!");
+                throw new HopperBotLoadingException("Failed to read config to uk.co.hopperelec.HopperBot.HopperBotConfig object!");
             }
             logger.info("Loaded config");
 
@@ -93,12 +93,12 @@ public final class HopperBot {
             try {
                 jda = builder.build();
             } catch (LoginException e) {
-                throw new HopperBotLoadingError("Failed to login to the bot!");
+                throw new HopperBotLoadingException("Failed to login to the bot!");
             }
             HopperBotUtils.createInstance(jda,config);
             logger.info("Logged into bot");
 
-        } catch (HopperBotLoadingError e) {
+        } catch (HopperBotLoadingException e) {
             logger.error(e.getMessage());
             System.exit(0);
         }

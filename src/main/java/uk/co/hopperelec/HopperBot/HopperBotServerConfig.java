@@ -8,17 +8,17 @@ import java.util.Set;
 public final class HopperBotServerConfig {
     private String name;
     private String invite;
-    private Long logChannel;
+    private long logChannel;
     private Set<HopperBotFeatures> extraFeatures;
     private Map<HopperBotFeatures,Map<String, JsonNode>> featureConfigs;
 
-    public static class NonConfigurableFeature extends Exception {
-        public NonConfigurableFeature(HopperBotFeatures feature) {
+    public static class NonConfigurableFeatureException extends Exception {
+        public NonConfigurableFeatureException(HopperBotFeatures feature) {
             super("The feature '"+feature+"' has been referred to in the feature_configs but cannot be configured");
         }
     }
 
-    public HopperBotServerConfig(String name, String invite, Long logChannel, Set<HopperBotFeatures> extraFeatures, Map<HopperBotFeatures,Map<String,JsonNode>> featureConfigs) throws NonConfigurableFeature {
+    public HopperBotServerConfig(String name, String invite, long logChannel, Set<HopperBotFeatures> extraFeatures, Map<HopperBotFeatures,Map<String,JsonNode>> featureConfigs) throws NonConfigurableFeatureException {
         this.name = name;
         this.invite = invite;
         this.logChannel = logChannel;
@@ -27,7 +27,7 @@ public final class HopperBotServerConfig {
 
         for (HopperBotFeatures feature : featureConfigs.keySet()) {
             if (!feature.configurable) {
-                throw new NonConfigurableFeature(feature);
+                throw new NonConfigurableFeatureException(feature);
             }
         }
     }

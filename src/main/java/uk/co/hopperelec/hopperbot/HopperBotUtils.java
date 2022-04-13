@@ -1,7 +1,6 @@
-package uk.co.hopperelec.HopperBot;
+package uk.co.hopperelec.hopperbot;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;

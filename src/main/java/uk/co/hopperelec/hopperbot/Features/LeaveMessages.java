@@ -1,10 +1,10 @@
-package uk.co.hopperelec.HopperBot.Features;
+package uk.co.hopperelec.hopperbot.Features;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
-import uk.co.hopperelec.HopperBot.HopperBotFeature;
-import uk.co.hopperelec.HopperBot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.HopperBotFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 
 import java.util.Map;
 

@@ -1,13 +1,13 @@
-package uk.co.hopperelec.HopperBot.Features;
+package uk.co.hopperelec.hopperbot.Features;
 
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import uk.co.hopperelec.HopperBot.CommandUsageFilter;
-import uk.co.hopperelec.HopperBot.HopperBotCommand;
-import uk.co.hopperelec.HopperBot.HopperBotCommandFeature;
-import uk.co.hopperelec.HopperBot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.CommandUsageFilter;
+import uk.co.hopperelec.hopperbot.HopperBotCommand;
+import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 
 public final class PollCommand extends HopperBotCommandFeature {
     public PollCommand() {

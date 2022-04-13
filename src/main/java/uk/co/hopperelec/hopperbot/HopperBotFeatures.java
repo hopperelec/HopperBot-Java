@@ -1,7 +1,7 @@
-package uk.co.hopperelec.HopperBot;
+package uk.co.hopperelec.hopperbot;
 
-import uk.co.hopperelec.HopperBot.Features.*;
-import uk.co.hopperelec.HopperBot.Features.Economy.Economy;
+import uk.co.hopperelec.hopperbot.Features.*;
+import uk.co.hopperelec.hopperbot.Features.Economy.Economy;
 
 import java.lang.reflect.Constructor;
 

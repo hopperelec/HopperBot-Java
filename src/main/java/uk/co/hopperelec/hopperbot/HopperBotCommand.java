@@ -29,9 +29,9 @@ public abstract class HopperBotCommand {
         }
         this.filters = filters;
 
-        this.slashCommand = Commands.slash(name,description);
+        slashCommand = Commands.slash(name,description);
         if (options != null) {
-            this.slashCommand.addOptions(options);
+            slashCommand.addOptions(options);
         }
         if (filters.length != 0) {
             for (CommandUsageFilter filter : filters) {
@@ -43,6 +43,6 @@ public abstract class HopperBotCommand {
         }
     }
 
-    public abstract void textCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils);
-    public abstract void slashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils);
+    public abstract void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils);
+    public abstract void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils);
 }

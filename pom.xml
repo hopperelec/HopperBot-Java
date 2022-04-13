@@ -13,7 +13,8 @@
     <description>HopperBot redesigned in JDA</description>
 
     <properties>
-        <java.version>16</java.version>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -32,8 +33,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -79,8 +80,8 @@
                                     <manifestEntries>
                                         <Built-By>hopperelec</Built-By>
                                         <Main-Class>uk.co.hopperelec.HopperBot.HopperBot</Main-Class>
-                                        <X-Compile-Source-JDK>${java.version}</X-Compile-Source-JDK>
-                                        <X-Compile-Target-JDK>${java.version}</X-Compile-Target-JDK>
+                                        <X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+                                        <X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -100,11 +101,6 @@
     </build>
 
     <repositories>
-        <repository>
-            <id>marian</id>
-            <name>m5rian-java</name>
-            <url>https://m5rian.jfrog.io/artifactory/java</url>
-        </repository>
         <repository>
             <id>dv8tion</id>
             <name>m2-dv8tion</name>

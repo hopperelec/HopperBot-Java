@@ -16,7 +16,7 @@ public abstract class HopperBotFeature extends ListenerAdapter {
         getUtils().log("Feature loaded",null,featureEnum);
     }
 
-    protected HopperBotUtils getUtils() {
+    protected final HopperBotUtils getUtils() {
         return HopperBotUtils.getInstance();
     }
 }

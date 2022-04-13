@@ -21,7 +21,7 @@ public class EconomyAddon extends ListenerAdapter {
         getUtils().log("Addon '"+addonEnum+"' loaded",null,featureEnum);
     }
 
-    protected HopperBotUtils getUtils() {
+    protected final HopperBotUtils getUtils() {
         return HopperBotUtils.getInstance();
     }
 }

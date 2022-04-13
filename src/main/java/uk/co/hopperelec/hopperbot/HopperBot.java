@@ -23,6 +23,9 @@ import java.util.Set;
 
 public final class HopperBot {
     public final static Logger logger = LoggerFactory.getLogger(HopperBot.class);
+    private final static String TOKEN_FILE_NAME = "token";
+    private final static String CONFIG_RESOURCE_NAME = "config.yml";
+    private final static String CONFIG_FILE_NAME = "config.yml";
 
     private static class HopperBotLoadingException extends Exception {
         public HopperBotLoadingException(String message) {
@@ -35,17 +38,14 @@ public final class HopperBot {
 
     private static String getToken() throws HopperBotLoadingException {
         try {
-            return Files.readString(Paths.get("token"));
+            return Files.readString(Paths.get(TOKEN_FILE_NAME));
         } catch (IOException e) {
             throw new HopperBotLoadingException("'token' file must be created in the working directory",e);
         }
     }
 
     private static void createConfig(Path configPath) throws HopperBotLoadingException {
-        final InputStream configStream = HopperBot.class.getResourceAsStream("/config.yml");
-        if (configStream == null) {
-            throw new HopperBotLoadingException("Failed to read default config from JAR!");
-        }
+        final InputStream configStream = getResourceStream(CONFIG_RESOURCE_NAME);
         try {
             Files.copy(configStream,configPath);
         } catch (IOException e) {
@@ -81,6 +81,14 @@ public final class HopperBot {
         builder.addEventListeners(new HopperBotCommandHandler(commandFeatures));
     }
 
+    public static InputStream getResourceStream(String name) throws HopperBotLoadingException {
+        final InputStream stream = HopperBot.class.getResourceAsStream("/"+name);
+        if (stream == null) {
+            throw new HopperBotLoadingException("Failed to read default config from JAR!");
+        }
+        return stream;
+    }
+
     public static void main(String[] args) {
         try {
             final JDABuilder builder = JDABuilder.create(GatewayIntent.GUILD_MEMBERS,GatewayIntent.GUILD_MESSAGES,GatewayIntent.GUILD_VOICE_STATES);
@@ -89,7 +97,7 @@ public final class HopperBot {
             builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);
             logger.info("Configured JDA builder");
 
-            final Path configPath = Paths.get(System.getProperty("user.dir"),"config.yml");
+            final Path configPath = Paths.get(System.getProperty("user.dir"),CONFIG_FILE_NAME);
             final File configFile = configPath.toFile();
             if (!configFile.exists() || configFile.isDirectory()) {
                 createConfig(configPath);

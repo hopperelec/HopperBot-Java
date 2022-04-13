@@ -24,7 +24,7 @@ import java.util.Set;
 public final class HopperBot {
     public final static Logger logger = LoggerFactory.getLogger(HopperBot.class);
     private final static String TOKEN_FILE_NAME = "token";
-    private final static String CONFIG_RESOURCE_NAME = "config.yml";
+    private final static String CONFIG_RESOURCE_PATH = "/config.yml";
     private final static String CONFIG_FILE_NAME = "config.yml";
 
     private static class HopperBotLoadingException extends Exception {
@@ -45,7 +45,7 @@ public final class HopperBot {
     }
 
     private static void createConfig(Path configPath) throws HopperBotLoadingException {
-        final InputStream configStream = getResourceStream(CONFIG_RESOURCE_NAME);
+        final InputStream configStream = getResourceStream(CONFIG_RESOURCE_PATH);
         try {
             Files.copy(configStream,configPath);
         } catch (IOException e) {
@@ -81,10 +81,10 @@ public final class HopperBot {
         builder.addEventListeners(new HopperBotCommandHandler(commandFeatures));
     }
 
-    public static InputStream getResourceStream(String name) throws HopperBotLoadingException {
-        final InputStream stream = HopperBot.class.getResourceAsStream("/"+name);
+    public static InputStream getResourceStream(String path) throws HopperBotLoadingException {
+        final InputStream stream = HopperBot.class.getResourceAsStream(path);
         if (stream == null) {
-            throw new HopperBotLoadingException("Failed to read default config from JAR!");
+            throw new HopperBotLoadingException("Failed to read resource "+path);
         }
         return stream;
     }

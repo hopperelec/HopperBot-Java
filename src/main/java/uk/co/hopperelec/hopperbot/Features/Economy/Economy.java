@@ -1,4 +1,4 @@
-package uk.co.hopperelec.HopperBot.Features.Economy;
+package uk.co.hopperelec.hopperbot.Features.Economy;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
@@ -6,9 +6,9 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.HopperBot.HopperBotCommandFeature;
-import uk.co.hopperelec.HopperBot.HopperBotFeatures;
-import uk.co.hopperelec.HopperBot.SimpleMySQLLoginDetails;
+import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.SimpleMySQLLoginDetails;
 
 import java.io.File;
 import java.io.IOException;

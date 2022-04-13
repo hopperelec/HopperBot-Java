@@ -1,4 +1,4 @@
-package uk.co.hopperelec.HopperBot;
+package uk.co.hopperelec.hopperbot;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

@@ -1,4 +1,4 @@
-package uk.co.hopperelec.HopperBot;
+package uk.co.hopperelec.hopperbot;
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;

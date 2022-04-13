@@ -1,10 +1,10 @@
-package uk.co.hopperelec.HopperBot.Features.Economy;
+package uk.co.hopperelec.hopperbot.Features.Economy;
 
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.HopperBot.HopperBotFeatures;
-import uk.co.hopperelec.HopperBot.HopperBotUtils;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.HopperBotUtils;
 
 public class EconomyAddon extends ListenerAdapter {
     public final EconomyAddons addonEnum;

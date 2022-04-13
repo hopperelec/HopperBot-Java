@@ -1,4 +1,4 @@
-package uk.co.hopperelec.HopperBot;
+package uk.co.hopperelec.hopperbot;
 
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;

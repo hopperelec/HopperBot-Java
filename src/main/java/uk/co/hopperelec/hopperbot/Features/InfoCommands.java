@@ -1,11 +1,11 @@
-package uk.co.hopperelec.HopperBot.Features;
+package uk.co.hopperelec.hopperbot.Features;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import net.dv8tion.jda.api.entities.Guild;
-import uk.co.hopperelec.HopperBot.HopperBotCommand;
-import uk.co.hopperelec.HopperBot.HopperBotCommandFeature;
-import uk.co.hopperelec.HopperBot.HopperBotFeatures;
-import uk.co.hopperelec.HopperBot.HopperBotServerConfig;
+import uk.co.hopperelec.hopperbot.HopperBotCommand;
+import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
 import java.util.HashSet;
 import java.util.Map;

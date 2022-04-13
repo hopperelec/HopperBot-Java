@@ -1,4 +1,4 @@
-package uk.co.hopperelec.HopperBot.Features;
+package uk.co.hopperelec.hopperbot.Features;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -6,9 +6,9 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.HopperBot.HopperBotCommandFeature;
-import uk.co.hopperelec.HopperBot.HopperBotFeatures;
-import uk.co.hopperelec.HopperBot.HopperBotServerConfig;
+import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
 public final class ServersList extends HopperBotCommandFeature {
     private MessageEmbed embed;

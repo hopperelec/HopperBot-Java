@@ -21,9 +21,9 @@ public final class PurgeCommand extends HopperBotCommandFeature {
                 new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete").setRequiredRange(1,500)},
                 CommandUsageFilter.has_manage_messages
             ) {
-                public void textCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     if (event.getMember() != null && event.getMember().hasPermission(Permission.MESSAGE_MANAGE)) {
-                        final String limitStr = content.replaceAll(" ", "");
+                        final String limitStr = content.replace(" ", "");
                         if (limitStr.equals("")) {
                             utils.tempReply(event.getMessage(),"Please specify the number of messages to delete (up to 500)!");
                         } else {
@@ -48,7 +48,7 @@ public final class PurgeCommand extends HopperBotCommandFeature {
                         }
                     }
                 }
-                public void slashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     OptionMapping option = event.getOption("limit");
                     if (option != null) {
                         ((PurgeCommand) feature).purgeMessages(event.getTextChannel(),option.getAsLong(),message -> event.reply(message).setEphemeral(true).queue());

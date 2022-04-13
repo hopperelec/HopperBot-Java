@@ -12,10 +12,10 @@ public final class PollCommand extends HopperBotCommandFeature {
     public PollCommand() {
         super(HopperBotFeatures.poll, "?",
             new HopperBotCommand("poll","Generates a reaction poll",null, new OptionData[]{new OptionData(OptionType.STRING,"question","Question to be voted on")}) {
-                public void textCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     ((PollCommand) feature).createPoll(event.getTextChannel(),content);
                 }
-                public void slashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     final OptionMapping option = event.getOption("question");
                     if (option != null) {
                         ((PollCommand) feature).createPoll(event.getTextChannel(),option.getAsString());

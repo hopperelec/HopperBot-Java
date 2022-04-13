@@ -21,12 +21,12 @@ public final class InfoCommands extends HopperBotCommandFeature {
         for (Map.Entry<String, JsonNode> commandConfig : serverConfig.getFeatureConfig(featureEnum).entrySet()) {
             final String desc = commandConfig.getValue().asText();
             final HopperBotCommand command = new HopperBotCommand(commandConfig.getKey(),desc,null,null) {
-                public void textCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     if (event.getGuild() == guild) {
                         event.getMessage().reply(desc).queue();
                     }
                 }
-                public void slashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     event.reply(desc).queue();
                 }
             };

@@ -7,19 +7,22 @@ import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 import java.util.List;
 
 public enum CommandUsageFilter {
-    is_bot_owner(new CommandPrivilege(CommandPrivilege.Type.USER,true,348083986989449216L)) {
+    IS_BOT_OWNER(new CommandPrivilege(CommandPrivilege.Type.USER,true,348083986989449216L)) {
+        @Override
         public boolean manualCheck(Member author, String content, HopperBotCommandFeature feature) {
             return author.getIdLong() != 348083986989449216L;
         }
     },
 
-    non_empty_content {
+    NON_EMPTY_CONTENT {
+        @Override
         public boolean manualCheck(Member author, String content, HopperBotCommandFeature feature) {
             return content.equals("");
         }
     },
 
-    has_manage_messages {
+    HAS_MANAGE_MESSAGES {
+        @Override
         public boolean manualCheck(Member author, String content, HopperBotCommandFeature feature) {
             return !author.hasPermission(Permission.MANAGE_PERMISSIONS);
         }

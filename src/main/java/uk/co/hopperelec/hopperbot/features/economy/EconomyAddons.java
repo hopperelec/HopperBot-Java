@@ -1,12 +1,12 @@
 package uk.co.hopperelec.hopperbot.features.economy;
 
-import uk.co.hopperelec.hopperbot.features.economy.addons.MMHM;
+import uk.co.hopperelec.hopperbot.features.economy.addons.MmhmAddon;
 import uk.co.hopperelec.hopperbot.HopperBot;
 
 import java.lang.reflect.Constructor;
 
 public enum EconomyAddons {
-    mmhm(true, MMHM.class);
+    mmhm(true, MmhmAddon.class);
 
     public final boolean configurable;
     public final Constructor<? extends EconomyAddon> handler;

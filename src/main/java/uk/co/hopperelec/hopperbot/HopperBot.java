@@ -1,8 +1,7 @@
 package uk.co.hopperelec.hopperbot;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -20,6 +19,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Set;
+
+import static com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE;
 
 public final class HopperBot {
     public final static Logger logger = LoggerFactory.getLogger(HopperBot.class);
@@ -55,11 +56,11 @@ public final class HopperBot {
 
     private static HopperBotConfig readConfig(File configFile) throws HopperBotLoadingException {
         try {
-            ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
-            objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
+            YAMLMapper objectMapper = YAMLMapper.builder().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).build();
+            objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
             return objectMapper.readValue(configFile, HopperBotConfig.class);
         } catch (IOException e) {
-            throw new HopperBotLoadingException("Failed to read config to HopperBotConfig object!",e);
+            throw new HopperBotLoadingException("Failed to read config to HopperBotConfig object (maybe incorrectly formatted)",e);
         }
     }
 

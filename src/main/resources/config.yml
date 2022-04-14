@@ -1,9 +1,9 @@
 enabled_features:
   - log_command
-  - purge
-  - autoVCGen
-  - poll
-  - info
+  - purging
+  - auto_vc_gen
+  - polls
+  - info_commands
   - economy
   - playlist
   - alchemy
@@ -18,10 +18,10 @@ servers:
     log_channel: 847261620206960651
     extra_features:
       - log_command
-      - purge
-      - autoVCGen
-      - poll
-      - info
+      - purging
+      - auto_vc_gen
+      - polls
+      - info_commands
       - economy
       - playlist
       - alchemy
@@ -30,9 +30,9 @@ servers:
       playlist:
         voice_channel: 847259922822856705
         commands_channel: 847259901281173534
-      autoVCGen:
+      auto_vc_gen:
         channel_names: ['Off Topic','StockBlock']
-      info:
+      info_commands:
         youtube: 'https://yt.hopperelec.co.uk/'
       alchemy:
         commands_channel: 849274424774754324

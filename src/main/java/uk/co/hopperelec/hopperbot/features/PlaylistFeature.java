@@ -3,8 +3,8 @@ package uk.co.hopperelec.hopperbot.features;
 import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 
-public final class Alchemy extends HopperBotCommandFeature {
-    public Alchemy() {
-        super(HopperBotFeatures.alchemy, "a!");
+public final class PlaylistFeature extends HopperBotCommandFeature {
+    public PlaylistFeature() {
+        super(HopperBotFeatures.PLAYLIST, "~");
     }
 }

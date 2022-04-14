@@ -16,9 +16,9 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class Economy extends HopperBotCommandFeature {
-    public Economy() {
-        super(HopperBotFeatures.economy, "$");
+public final class EconomyFeature extends HopperBotCommandFeature {
+    public EconomyFeature() {
+        super(HopperBotFeatures.ECONOMY, "$");
     }
 
     @Override

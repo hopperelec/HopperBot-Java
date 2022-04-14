@@ -8,9 +8,9 @@ import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 
 import java.util.Map;
 
-public final class LeaveMessages extends HopperBotFeature {
-    public LeaveMessages() {
-        super(HopperBotFeatures.leave_messages);
+public final class LeaveMessagesFeature extends HopperBotFeature {
+    public LeaveMessagesFeature() {
+        super(HopperBotFeatures.LEAVE_MESSAGES);
     }
 
     @Override

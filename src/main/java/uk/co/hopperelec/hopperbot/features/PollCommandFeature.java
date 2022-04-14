@@ -8,17 +8,20 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import uk.co.hopperelec.hopperbot.*;
 
-public final class PollCommand extends HopperBotCommandFeature {
-    public PollCommand() {
-        super(HopperBotFeatures.poll, "?",
+public final class PollCommandFeature extends HopperBotCommandFeature {
+    public PollCommandFeature() {
+        super(HopperBotFeatures.POLLS, "?",
             new HopperBotCommand("poll","Generates a reaction poll",null, new OptionData[]{new OptionData(OptionType.STRING,"question","Question to be voted on")}) {
+                @Override
                 public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
-                    ((PollCommand) feature).createPoll(event.getTextChannel(),content);
+                    ((PollCommandFeature) feature).createPoll(event.getTextChannel(),content);
                 }
+
+                @Override
                 public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     final OptionMapping option = event.getOption("question");
                     if (option != null) {
-                        ((PollCommand) feature).createPoll(event.getTextChannel(),option.getAsString());
+                        ((PollCommandFeature) feature).createPoll(event.getTextChannel(),option.getAsString());
                         event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
                     }
                 }

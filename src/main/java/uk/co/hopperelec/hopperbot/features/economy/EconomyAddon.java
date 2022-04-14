@@ -8,11 +8,11 @@ import uk.co.hopperelec.hopperbot.HopperBotUtils;
 
 public class EconomyAddon extends ListenerAdapter {
     public final EconomyAddons addonEnum;
-    public final HopperBotFeatures featureEnum = HopperBotFeatures.economy;
-    protected final Economy economy;
+    public final HopperBotFeatures featureEnum = HopperBotFeatures.ECONOMY;
+    protected final EconomyFeature economyFeature;
 
-    public EconomyAddon(Economy economy, EconomyAddons addonEnum) {
-        this.economy = economy;
+    public EconomyAddon(EconomyFeature economyFeature, EconomyAddons addonEnum) {
+        this.economyFeature = economyFeature;
         this.addonEnum = addonEnum;
     }
 

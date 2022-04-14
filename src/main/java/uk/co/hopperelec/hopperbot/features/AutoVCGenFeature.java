@@ -16,9 +16,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class AutoVCGen extends HopperBotFeature {
-    public AutoVCGen() {
-        super(HopperBotFeatures.autoVCGen);
+public final class AutoVCGenFeature extends HopperBotFeature {
+    public AutoVCGenFeature() {
+        super(HopperBotFeatures.AUTO_VC_GEN);
     }
 
     private final Map<Guild, List<String>> channelNames =  new HashMap<>();

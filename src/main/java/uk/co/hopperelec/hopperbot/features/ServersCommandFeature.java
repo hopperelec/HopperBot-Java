@@ -10,11 +10,11 @@ import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
-public final class ServersList extends HopperBotCommandFeature {
+public final class ServersCommandFeature extends HopperBotCommandFeature {
     private MessageEmbed embed;
 
-    public ServersList() {
-        super(HopperBotFeatures.server_list,"?");
+    public ServersCommandFeature() {
+        super(HopperBotFeatures.SERVER_LIST,"?");
     }
 
     @Override

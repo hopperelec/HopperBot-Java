@@ -14,13 +14,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 
-public final class PurgeCommand extends HopperBotCommandFeature {
-    public PurgeCommand() {
-        super(HopperBotFeatures.purge, "!",
+public final class PurgeCommandFeature extends HopperBotCommandFeature {
+    public PurgeCommandFeature() {
+        super(HopperBotFeatures.PURGING, "!",
             new HopperBotCommand("purge","Moderation command for deleting up to 500 messages in bulk",null,
                 new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete").setRequiredRange(1,500)},
-                CommandUsageFilter.has_manage_messages
+                CommandUsageFilter.HAS_MANAGE_MESSAGES
             ) {
+                @Override
                 public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     if (event.getMember() != null && event.getMember().hasPermission(Permission.MESSAGE_MANAGE)) {
                         final String limitStr = content.replace(" ", "");
@@ -40,7 +41,7 @@ public final class PurgeCommand extends HopperBotCommandFeature {
                                 utils.tempReply(event.getMessage(),"Cannot purge more than 500 messages!");
                             } else {
                                 event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS);
-                                ((PurgeCommand) feature).purgeMessages(event.getTextChannel(),limit,message -> {
+                                ((PurgeCommandFeature) feature).purgeMessages(event.getTextChannel(),limit, message -> {
                                     event.getMessage().reply(message).queue();
                                     event.getMessage().delete().queueAfter(5, TimeUnit.SECONDS);
                                 });
@@ -48,10 +49,12 @@ public final class PurgeCommand extends HopperBotCommandFeature {
                         }
                     }
                 }
+
+                @Override
                 public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     OptionMapping option = event.getOption("limit");
                     if (option != null) {
-                        ((PurgeCommand) feature).purgeMessages(event.getTextChannel(),option.getAsLong(),message -> event.reply(message).setEphemeral(true).queue());
+                        ((PurgeCommandFeature) feature).purgeMessages(event.getTextChannel(),option.getAsLong(), message -> event.reply(message).setEphemeral(true).queue());
                     }
                 }
             }
@@ -59,17 +62,17 @@ public final class PurgeCommand extends HopperBotCommandFeature {
     }
 
     public void purgeMessages(TextChannel channel, long limit, Consumer<String> reply) {
-        channel.getIterableHistory().takeAsync((int) limit).thenAccept(messages ->
+        channel.getIterableHistory().takeAsync((int) limit).thenAccept(messages -> {
                 channel.purgeMessages(messages).forEach(future -> {
                     try {
                         future.get();
                     } catch (InterruptedException | ExecutionException e) {
                         reply.accept("Failed to purge some messages");
                         getUtils().log("Failed to purge some messages: " + e.getMessage(), channel.getGuild(), featureEnum);
-                        return;
                     }
-                    reply.accept("Messages purged!");
-                })
+                });
+                reply.accept("Messages purged!");
+            }
         );
     }
 }

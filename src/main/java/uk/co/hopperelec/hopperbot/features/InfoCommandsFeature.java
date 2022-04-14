@@ -10,9 +10,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public final class InfoCommands extends HopperBotCommandFeature {
-    public InfoCommands() {
-        super(HopperBotFeatures.info,"?");
+public final class InfoCommandsFeature extends HopperBotCommandFeature {
+    public InfoCommandsFeature() {
+        super(HopperBotFeatures.INFO_COMMANDS,"?");
     }
 
     @Override
@@ -21,11 +21,14 @@ public final class InfoCommands extends HopperBotCommandFeature {
         for (Map.Entry<String, JsonNode> commandConfig : serverConfig.getFeatureConfig(featureEnum).entrySet()) {
             final String desc = commandConfig.getValue().asText();
             final HopperBotCommand command = new HopperBotCommand(commandConfig.getKey(),desc,null,null) {
+                @Override
                 public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     if (event.getGuild() == guild) {
                         event.getMessage().reply(desc).queue();
                     }
                 }
+
+                @Override
                 public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     event.reply(desc).queue();
                 }

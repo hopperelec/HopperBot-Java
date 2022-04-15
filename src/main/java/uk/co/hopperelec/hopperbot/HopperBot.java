@@ -69,8 +69,7 @@ public final class HopperBot {
         for (HopperBotFeatures feature : config.getEnabledFeatures()) {
             if (feature.handler != null) {
                 try {
-                    final HopperBotFeature featureInstance = feature.handler.newInstance();
-                    builder.addEventListeners(featureInstance);
+                    final HopperBotFeature featureInstance = feature.handler.newInstance(builder);
                     if (featureInstance instanceof HopperBotCommandFeature) {
                         commandFeatures.add((HopperBotCommandFeature) featureInstance);
                     }

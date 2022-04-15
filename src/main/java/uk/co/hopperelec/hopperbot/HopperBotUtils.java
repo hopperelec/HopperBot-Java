@@ -1,6 +1,8 @@
 package uk.co.hopperelec.hopperbot;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
@@ -9,6 +11,9 @@ import net.dv8tion.jda.api.entities.TextChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -67,6 +72,33 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         } else {
             logger.error("Attempt made to make an instance of HopperBotUtils but one already exists");
         }
+    }
+
+    public <T> T getYAMLFile(HopperBotFeatures feature, String fileLocation, Class<T> serializedClass) {
+        final File file = Paths.get(System.getProperty("user.dir"),fileLocation).toFile();
+        try {
+            if (file.createNewFile()) {
+                logger.warn(fileLocation+" couldn't be found. An empty file has been created for you. Please enter the host, name, user and password into it");
+                return null;
+            } else {
+                log("Found "+fileLocation,null,feature);
+            }
+        } catch (IOException e) {
+            logger.error(fileLocation+" couldn't be found and an empty file could not be created");
+            return null;
+        }
+
+        final T serializedResult;
+        final ObjectMapper objectMapper = new ObjectMapper(new YAMLFactory());
+        try {
+            serializedResult = objectMapper.readValue(file, serializedClass);
+        } catch (IOException e) {
+            logger.error("Failed to serialize {} (maybe incorrectly formatted)",fileLocation,e);
+            return null;
+        }
+        log("Loaded "+fileLocation,null,feature);
+
+        return serializedResult;
     }
 
     public static HopperBotUtils getInstance() {

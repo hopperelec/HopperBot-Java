@@ -1,6 +1,7 @@
 package uk.co.hopperelec.hopperbot.features;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
@@ -17,8 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class AutoVCGenFeature extends HopperBotFeature {
-    public AutoVCGenFeature() {
-        super(HopperBotFeatures.AUTO_VC_GEN);
+    public AutoVCGenFeature(JDABuilder builder) {
+        super(builder,HopperBotFeatures.AUTO_VC_GEN);
     }
 
     private final Map<Guild, List<String>> channelNames =  new HashMap<>();

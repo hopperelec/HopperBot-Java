@@ -1,5 +1,6 @@
 package uk.co.hopperelec.hopperbot;
 
+import net.dv8tion.jda.api.JDABuilder;
 import uk.co.hopperelec.hopperbot.features.*;
 import uk.co.hopperelec.hopperbot.features.economy.EconomyFeature;
 
@@ -27,7 +28,7 @@ public enum HopperBotFeatures {
     } else {
       Constructor<? extends HopperBotFeature> setHandler;
       try {
-        setHandler = featureHandler.getConstructor();
+        setHandler = featureHandler.getConstructor(JDABuilder.class);
       } catch (NoSuchMethodException e) {
         HopperBot.logger.error("Could not find HopperBotFeature constructor for feature {}",name());
         setHandler = null;

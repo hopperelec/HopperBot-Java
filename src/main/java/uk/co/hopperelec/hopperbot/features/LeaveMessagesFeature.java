@@ -1,6 +1,7 @@
 package uk.co.hopperelec.hopperbot.features;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.guild.member.GuildMemberRemoveEvent;
 import uk.co.hopperelec.hopperbot.HopperBotFeature;
@@ -9,8 +10,8 @@ import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import java.util.Map;
 
 public final class LeaveMessagesFeature extends HopperBotFeature {
-    public LeaveMessagesFeature() {
-        super(HopperBotFeatures.LEAVE_MESSAGES);
+    public LeaveMessagesFeature(JDABuilder builder) {
+        super(builder,HopperBotFeatures.LEAVE_MESSAGES);
     }
 
     @Override

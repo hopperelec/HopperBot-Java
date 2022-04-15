@@ -1,6 +1,7 @@
 package uk.co.hopperelec.hopperbot.features;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -11,8 +12,8 @@ import java.util.Map;
 import java.util.Set;
 
 public final class InfoCommandsFeature extends HopperBotCommandFeature {
-    public InfoCommandsFeature() {
-        super(HopperBotFeatures.INFO_COMMANDS,"?");
+    public InfoCommandsFeature(JDABuilder builder) {
+        super(builder,HopperBotFeatures.INFO_COMMANDS,"?");
     }
 
     @Override

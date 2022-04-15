@@ -1,5 +1,6 @@
 package uk.co.hopperelec.hopperbot;
 
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 
 import java.util.HashSet;
@@ -13,8 +14,8 @@ public class HopperBotCommandFeature extends HopperBotFeature {
     public final Set<HopperBotCommand> commands;
     public final Set<Guild> guilds = new HashSet<>();
 
-    public HopperBotCommandFeature(HopperBotFeatures featureEnum, String commandPrefix, HopperBotCommand... commands) {
-        super(featureEnum);
+    public HopperBotCommandFeature(JDABuilder builder, HopperBotFeatures featureEnum, String commandPrefix, HopperBotCommand... commands) {
+        super(builder,featureEnum);
         this.commandPrefix = commandPrefix;
         if (commands.length == 0) {
             this.commands = new HashSet<>();

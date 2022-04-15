@@ -1,6 +1,7 @@
 package uk.co.hopperelec.hopperbot.features;
 
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -13,8 +14,8 @@ import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 public final class ServersCommandFeature extends HopperBotCommandFeature {
     private MessageEmbed embed;
 
-    public ServersCommandFeature() {
-        super(HopperBotFeatures.SERVER_LIST,"?");
+    public ServersCommandFeature(JDABuilder builder) {
+        super(builder,HopperBotFeatures.SERVER_LIST,"?");
     }
 
     @Override

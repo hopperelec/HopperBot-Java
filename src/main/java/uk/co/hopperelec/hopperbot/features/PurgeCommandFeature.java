@@ -1,5 +1,6 @@
 package uk.co.hopperelec.hopperbot.features;
 
+import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -15,8 +16,8 @@ import java.util.function.Consumer;
 
 
 public final class PurgeCommandFeature extends HopperBotCommandFeature {
-    public PurgeCommandFeature() {
-        super(HopperBotFeatures.PURGING, "!",
+    public PurgeCommandFeature(JDABuilder builder) {
+        super(builder,HopperBotFeatures.PURGING, "!",
             new HopperBotCommand("purge","Moderation command for deleting up to 500 messages in bulk",null,
                 new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete").setRequiredRange(1,500)},
                 CommandUsageFilter.HAS_MANAGE_MESSAGES

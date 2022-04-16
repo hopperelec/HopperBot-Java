@@ -27,6 +27,10 @@ import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public final class PlaylistFeature extends HopperBotCommandFeature implements AudioEventListener {
 
@@ -38,8 +42,6 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
     private final Random random = new Random();
     final AudioPlayerManager playerManager;
     final AudioPlayer player;
-    final ByteBuffer buffer;
-    final MutableAudioFrame frame;
     final AudioSendHandler sendHandler;
 
     public PlaylistFeature(JDABuilder builder) {
@@ -48,18 +50,18 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
         player = playerManager.createPlayer();
         playerManager.registerSourceManager(new LocalAudioSourceManager());
 
-        buffer = ByteBuffer.allocate(1024);
-        frame = new MutableAudioFrame();
+        final ByteBuffer buffer = ByteBuffer.allocate(1024);
+        final MutableAudioFrame frame = new MutableAudioFrame();
         frame.setBuffer(buffer);
+        final AtomicBoolean lastProvide = new AtomicBoolean(false);
         sendHandler = new AudioSendHandler() {
             @Override
             public boolean canProvide() {
-                return player.provide(frame);
+                return lastProvide.get();
             }
 
             @Override
             public ByteBuffer provide20MsAudio() {
-                ((Buffer) buffer).flip();
                 return buffer;
             }
 
@@ -68,6 +70,12 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
                 return true;
             }
         };
+        newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
+            lastProvide.set(player.provide(frame));
+            if (lastProvide.get()) {
+                ((Buffer) buffer).flip();
+            }
+        }, 20, 20, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -94,7 +102,9 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
             }
 
             @Override
-            public void playlistLoaded(AudioPlaylist playlist) {}
+            public void playlistLoaded(AudioPlaylist playlist) {
+                // Only individual tracks are loaded; playlists are not expected
+            }
 
             @Override
             public void noMatches() {
@@ -121,7 +131,7 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
                 });
             });
             songFilenames = songData.keySet();
-            getUtils().log("Serialized songs into Map<String, Map<String,JsonNode>>",null,featureEnum);
+            getUtils().log("Serialized songs",null,featureEnum);
 
             player.addListener(this);
             playNextSong();

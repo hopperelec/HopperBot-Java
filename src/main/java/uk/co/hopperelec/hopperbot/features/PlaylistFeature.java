@@ -35,7 +35,8 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 public final class PlaylistFeature extends HopperBotCommandFeature implements AudioEventListener {
 
     private static final String songDataFileLocation = "Playlist/songs.yml";
-    private static final String songDirectoryLocation = "Playlist/songs/";
+    private static final String songDirectoryLocation = "Playlist/";
+    private static final int maxNextSongAttempts = 5;
     private final String absoluteSongDirectoryLocation = FileSystems.getDefault().getPath(songDirectoryLocation).toAbsolutePath().toString();
     private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
     private Set<String> songFilenames;
@@ -81,41 +82,47 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
     @Override
     public void onEvent(AudioEvent event) {
         if (event instanceof TrackEndEvent && ((TrackEndEvent) event).endReason.mayStartNext) {
-            playNextSong();
+            playNextSong(0);
         }
     }
 
-    public void playNextSong() {
-        final Iterator<String> iterator = songFilenames.iterator();
-        for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
-            iterator.next();
+    public void playNextSong(int attempts) {
+        if (attempts < maxNextSongAttempts) {
+            final Iterator<String> iterator = songFilenames.iterator();
+            for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
+                iterator.next();
+            }
+
+            final String songFileName = iterator.next();
+            getUtils().log("Now trying to play "+songFileName,null,featureEnum);
+            final String songFileLocation = absoluteSongDirectoryLocation+File.separator+songFileName;
+            playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
+                @Override
+                public void trackLoaded(AudioTrack track) {
+                    getUtils().log("Successfully loaded "+songFileName,null,featureEnum);
+                    player.startTrack(track,false);
+                }
+
+                @Override
+                public void playlistLoaded(AudioPlaylist playlist) {
+                    // Only individual tracks are loaded; playlists are not expected
+                }
+
+                @Override
+                public void noMatches() {
+                    getUtils().log("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),null,featureEnum);
+                    playNextSong(attempts+1);
+                }
+
+                @Override
+                public void loadFailed(FriendlyException exception) {
+                    getUtils().log("Failed loading "+songFileName,null,featureEnum);
+                    playNextSong(attempts+1);
+                }
+            });
+        } else {
+            getUtils().log("Maximum attempts at playing the next song ("+maxNextSongAttempts+") reached",null,featureEnum);
         }
-
-        final String songFileName = iterator.next();
-        getUtils().log("Now trying to play "+songFileName,null,featureEnum);
-        final String songFileLocation = absoluteSongDirectoryLocation+File.separator+songFileName;
-        playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
-            @Override
-            public void trackLoaded(AudioTrack track) {
-                getUtils().log("Successfully loaded "+songFileName,null,featureEnum);
-                player.startTrack(track,false);
-            }
-
-            @Override
-            public void playlistLoaded(AudioPlaylist playlist) {
-                // Only individual tracks are loaded; playlists are not expected
-            }
-
-            @Override
-            public void noMatches() {
-                getUtils().log("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),null,featureEnum);
-            }
-
-            @Override
-            public void loadFailed(FriendlyException exception) {
-                getUtils().log("Failed loading "+songFileName,null,featureEnum);
-            }
-        });
     }
 
     @Override
@@ -134,7 +141,7 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
             getUtils().log("Serialized songs",null,featureEnum);
 
             player.addListener(this);
-            playNextSong();
+            playNextSong(0);
         }
     }
 

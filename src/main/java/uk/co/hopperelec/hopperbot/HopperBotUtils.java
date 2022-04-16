@@ -66,7 +66,7 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         });
     }
 
-    static void createInstance(JDA jda, HopperBotConfig config) {
+    static synchronized void createInstance(JDA jda, HopperBotConfig config) {
         if (instance == null) {
             instance = new HopperBotUtils(jda, config);
         } else {

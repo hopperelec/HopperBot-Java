@@ -30,9 +30,6 @@ public final class HopperBotConfig {
     }
 
     public HopperBotServerConfig getServerConfig(Long id) {
-        if (servers.get(id) == null) {
-            HopperBot.logger.warn("Tried to get config for server ({}) but the server has not been configured!",id);
-        }
         return servers.get(id);
     }
 }

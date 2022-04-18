@@ -114,6 +114,8 @@ public class HopperBotCommandHandler extends ListenerAdapter {
                 getUtils().log("Missing Oauth2 scope 'applications.commands' which is needed to be able to add slash commands to the server. Re-invite the bot using this link: "+
                         "https://discord.com/api/oauth2/authorize?client_id=769709648092856331&scope=bot%20applications.commands&permissions=8", event.getGuild(),null);
             }));
+        } else {
+            getUtils().log("Bot is in guild "+event.getGuild().getId()+" which has not been configured",event.getGuild(),null);
         }
     }
 }

@@ -15,9 +15,11 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
+import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
+import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
@@ -33,11 +35,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
 public final class PlaylistFeature extends HopperBotCommandFeature implements AudioEventListener {
-
-    private static final String songDataFileLocation = "Playlist/songs.yml";
-    private static final String songDirectoryLocation = "Playlist/";
+    private static final String songsDataFileLocation = "Playlist/songs.yml";
+    private static final String songsDirectoryLocation = "Playlist/";
     private static final int maxNextSongAttempts = 5;
-    private final String absoluteSongDirectoryLocation = FileSystems.getDefault().getPath(songDirectoryLocation).toAbsolutePath().toString();
+    private final String absoluteSongsDirectoryLocation = FileSystems.getDefault().getPath(songsDirectoryLocation).toAbsolutePath().toString();
     private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
     private Set<String> songFilenames;
     private final Random random = new Random();
@@ -92,10 +93,11 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
             for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
                 iterator.next();
             }
-
             final String songFileName = iterator.next();
+            getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFileName)));
             getUtils().log("Now trying to play "+songFileName,null,featureEnum);
-            final String songFileLocation = absoluteSongDirectoryLocation+File.separator+songFileName;
+
+            final String songFileLocation = absoluteSongsDirectoryLocation+File.separator+songFileName;
             playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
                 @Override
                 public void trackLoaded(AudioTrack track) {
@@ -122,6 +124,7 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
             });
         } else {
             getUtils().log("Maximum attempts at playing the next song ("+maxNextSongAttempts+") reached",null,featureEnum);
+            getUtils().jda().getPresence().setActivity(null);
         }
     }
 
@@ -129,9 +132,9 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
 
-        final JsonNode songDataNode = getUtils().getYAMLFile(featureEnum, songDataFileLocation, JsonNode.class);
-        if (songDataNode != null) {
-            songDataNode.fields().forEachRemaining(song -> {
+        final JsonNode songsDataNode = getUtils().getYAMLFile(featureEnum, songsDataFileLocation, JsonNode.class);
+        if (songsDataNode != null) {
+            songsDataNode.fields().forEachRemaining(song -> {
                 songData.put(song.getKey(),new HashMap<>());
                 song.getValue().fields().forEachRemaining(songProperty -> {
                     songData.get(song.getKey()).put(songProperty.getKey(),songProperty.getValue());

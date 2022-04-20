@@ -40,10 +40,10 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
     private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
     private Set<String> songFilenames;
     private final Random random = new Random();
-    final AudioPlayerManager playerManager;
-    final AudioPlayer player;
-    final AudioSendHandler sendHandler;
-    AudioFrame frame;
+    private final AudioPlayerManager playerManager;
+    private final AudioPlayer player;
+    private final AudioSendHandler sendHandler;
+    private AudioFrame frame;
 
     public PlaylistFeature(JDABuilder builder) {
         super(builder,HopperBotFeatures.PLAYLIST, "~");

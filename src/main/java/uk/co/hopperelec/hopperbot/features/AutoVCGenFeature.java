@@ -18,12 +18,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class AutoVCGenFeature extends HopperBotFeature {
+    private final Map<Guild, List<String>> channelNames =  new HashMap<>();
+    private final Pattern pattern = Pattern.compile("^(.+) ([1-9]\\d*)$");
+
     public AutoVCGenFeature(JDABuilder builder) {
         super(builder,HopperBotFeatures.AUTO_VC_GEN);
     }
-
-    private final Map<Guild, List<String>> channelNames =  new HashMap<>();
-    private final Pattern pattern = Pattern.compile("^(.+) ([1-9]\\d*)$");
 
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {

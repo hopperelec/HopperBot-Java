@@ -50,7 +50,7 @@ public final class AutoVCGenFeature extends HopperBotFeature {
     }
 
     @Override
-    public void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
+    public synchronized void onGuildVoiceUpdate(@NotNull GuildVoiceUpdateEvent event) {
         VoiceChannel channel = (VoiceChannel) event.getChannelLeft();
         final String[] autoVCLeft = getAutoVC(channel,false);
         if (autoVCLeft != null) {

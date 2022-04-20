@@ -12,7 +12,7 @@ import com.sedmelluq.discord.lavaplayer.source.local.LocalAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import com.sedmelluq.discord.lavaplayer.track.playback.MutableAudioFrame;
+import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Activity;
@@ -25,12 +25,10 @@ import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 
 import java.io.File;
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
@@ -45,6 +43,7 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
     final AudioPlayerManager playerManager;
     final AudioPlayer player;
     final AudioSendHandler sendHandler;
+    AudioFrame frame;
 
     public PlaylistFeature(JDABuilder builder) {
         super(builder,HopperBotFeatures.PLAYLIST, "~");
@@ -52,19 +51,15 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
         player = playerManager.createPlayer();
         playerManager.registerSourceManager(new LocalAudioSourceManager());
 
-        final ByteBuffer buffer = ByteBuffer.allocate(1024);
-        final MutableAudioFrame frame = new MutableAudioFrame();
-        frame.setBuffer(buffer);
-        final AtomicBoolean lastProvide = new AtomicBoolean(false);
         sendHandler = new AudioSendHandler() {
             @Override
             public boolean canProvide() {
-                return lastProvide.get();
+                return frame != null;
             }
 
             @Override
             public ByteBuffer provide20MsAudio() {
-                return buffer;
+                return ByteBuffer.wrap(frame.getData());
             }
 
             @Override
@@ -72,12 +67,7 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
                 return true;
             }
         };
-        newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> {
-            lastProvide.set(player.provide(frame));
-            if (lastProvide.get()) {
-                ((Buffer) buffer).flip();
-            }
-        }, 20, 20, TimeUnit.MILLISECONDS);
+        newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -94,34 +84,37 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
                 iterator.next();
             }
             final String songFileName = iterator.next();
-            getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFileName)));
-            getUtils().log("Now trying to play "+songFileName,null,featureEnum);
 
-            final String songFileLocation = absoluteSongsDirectoryLocation+File.separator+songFileName;
-            playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
-                @Override
-                public void trackLoaded(AudioTrack track) {
-                    getUtils().log("Successfully loaded "+songFileName,null,featureEnum);
-                    player.startTrack(track,false);
-                }
+            synchronized (this) {
+                getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFileName)));
+                getUtils().log("Now trying to play "+songFileName,null,featureEnum);
 
-                @Override
-                public void playlistLoaded(AudioPlaylist playlist) {
-                    // Only individual tracks are loaded; playlists are not expected
-                }
+                final String songFileLocation = absoluteSongsDirectoryLocation+File.separator+songFileName;
+                playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
+                    @Override
+                    public void trackLoaded(AudioTrack track) {
+                        getUtils().log("Successfully loaded "+songFileName,null,featureEnum);
+                        player.playTrack(track);
+                    }
 
-                @Override
-                public void noMatches() {
-                    getUtils().log("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),null,featureEnum);
-                    playNextSong(attempts+1);
-                }
+                    @Override
+                    public void playlistLoaded(AudioPlaylist playlist) {
+                        // Only individual tracks are loaded; playlists are not expected
+                    }
 
-                @Override
-                public void loadFailed(FriendlyException exception) {
-                    getUtils().log("Failed loading "+songFileName,null,featureEnum);
-                    playNextSong(attempts+1);
-                }
-            });
+                    @Override
+                    public void noMatches() {
+                        getUtils().log("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),null,featureEnum);
+                        playNextSong(attempts+1);
+                    }
+
+                    @Override
+                    public void loadFailed(FriendlyException exception) {
+                        getUtils().log("Failed loading "+songFileName,null,featureEnum);
+                        playNextSong(attempts+1);
+                    }
+                });
+            }
         } else {
             getUtils().log("Maximum attempts at playing the next song ("+maxNextSongAttempts+") reached",null,featureEnum);
             getUtils().jda().getPresence().setActivity(null);

@@ -13,32 +13,44 @@ import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
 import net.dv8tion.jda.api.entities.Activity;
+import net.dv8tion.jda.api.entities.Emoji;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
-import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.*;
 
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 
-public final class PlaylistFeature extends HopperBotCommandFeature implements AudioEventListener {
-    private static final String songsDataFileLocation = "Playlist/songs.yml";
-    private static final String songsDirectoryLocation = "Playlist/";
-    private static final int maxNextSongAttempts = 5;
-    private final String absoluteSongsDirectoryLocation = FileSystems.getDefault().getPath(songsDirectoryLocation).toAbsolutePath().toString();
+public final class PlaylistFeature extends HopperBotButtonFeature implements AudioEventListener {
+    private static final String SONGS_FILE_LOC = "Playlist/songs.yml";
+    private static final String SONGS_DIR_LOC = "Playlist/";
+    private static final String ABSOLUTE_SONGS_DIR_LOC = FileSystems.getDefault().getPath(SONGS_DIR_LOC).toAbsolutePath().toString();
+    private static final int SONGLIST_MAX_LINES = 31;
     private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
     private Set<String> songFilenames;
+    private final List<String> lastThreeSongs = new ArrayList<>(3);
+    private static final int maxNextSongAttempts = 5;
+    private final List<MessageEmbed> songlistPages = new ArrayList<>();
     private final Random random = new Random();
     private final AudioPlayerManager playerManager;
     private final AudioPlayer player;
@@ -46,7 +58,21 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
     private AudioFrame frame;
 
     public PlaylistFeature(JDABuilder builder) {
-        super(builder,HopperBotFeatures.PLAYLIST, "~");
+        super("playlist",builder,HopperBotFeatures.PLAYLIST,"~",
+                new HopperBotCommand("songlist","Shows list of songs currently in the playlist",new String[]{"playlist"},null) {
+                    @Override
+                    public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                        final PlaylistFeature self = ((PlaylistFeature) feature);
+                        event.getMessage().replyEmbeds(self.songlistPages.get(0)).setActionRow(self.getSonglistButtons(1)).queue();
+                    }
+
+                    @Override
+                    public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                        final PlaylistFeature self = ((PlaylistFeature) feature);
+                        event.replyEmbeds(self.songlistPages.get(0)).addActionRow(self.getSonglistButtons(1)).queue();
+                    }
+                }
+        );
         playerManager = new DefaultAudioPlayerManager();
         player = playerManager.createPlayer();
         playerManager.registerSourceManager(new LocalAudioSourceManager());
@@ -70,6 +96,44 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
         newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
     }
 
+    private Button songlistButton(String action, String emojiUnicode, boolean disabled) {
+        final Button button = Button.of(ButtonStyle.PRIMARY,"playlist-songlist-"+action, Emoji.fromUnicode(emojiUnicode));
+        if (disabled) {
+            return button.asDisabled();
+        }
+        return button;
+    }
+    private List<Button> getSonglistButtons(int currentPage) {
+        boolean prev = currentPage == 1;
+        boolean next = currentPage == songlistPages.size();
+        return List.of(
+                songlistButton("start","U+23EE",prev),
+                songlistButton("previous","U+023EA",prev),
+                songlistButton("next","U+023E9",next),
+                songlistButton("end","U+023ED",next)
+        );
+    }
+
+    private int getSonglistPageNumber(ButtonInteractionEvent event) {
+        final String title = event.getMessage().getEmbeds().get(0).getTitle();
+        if (title == null) {
+            return -1;
+        }
+        final String[] titleWords = title.split(" ");
+        return Integer.parseInt(titleWords[titleWords.length-1].split("/")[0]);
+    }
+    public void runButtonCommand(ButtonInteractionEvent event,String[] parts) {
+        if (parts[1].equals("songlist")) {
+            final int newPage = switch (parts[2]) {
+                default -> 1;
+                case "previous" -> getSonglistPageNumber(event)-1;
+                case "next" -> getSonglistPageNumber(event)+1;
+                case "end" -> songlistPages.size();
+            };
+            event.editMessageEmbeds(songlistPages.get(newPage-1)).setActionRow(getSonglistButtons(newPage)).queue();
+        }
+    }
+
     @Override
     public void onEvent(AudioEvent event) {
         if (event instanceof TrackEndEvent && ((TrackEndEvent) event).endReason.mayStartNext) {
@@ -79,21 +143,33 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
 
     public void playNextSong(int attempts) {
         if (attempts < maxNextSongAttempts) {
-            final Iterator<String> iterator = songFilenames.iterator();
-            for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
-                iterator.next();
+            String next = "";
+            boolean loop = true;
+            while (loop) {
+                final Iterator<String> iterator = songFilenames.iterator();
+                for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
+                    iterator.next();
+                }
+                next = iterator.next();
+                if (!lastThreeSongs.contains(next)) {
+                    loop = false;
+                }
             }
-            final String songFileName = iterator.next();
+            final String songFilename = next;
+            lastThreeSongs.add(songFilename);
+            if (lastThreeSongs.size() == 4) {
+                lastThreeSongs.remove(0);
+            }
 
             synchronized (this) {
-                getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFileName)));
-                getUtils().log("Now trying to play "+songFileName,null,featureEnum);
+                getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFilename)));
+                getUtils().log("Now trying to play "+songFilename,null,featureEnum);
 
-                final String songFileLocation = absoluteSongsDirectoryLocation+File.separator+songFileName;
+                final String songFileLocation = ABSOLUTE_SONGS_DIR_LOC+File.separator+songFilename;
                 playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
                     @Override
                     public void trackLoaded(AudioTrack track) {
-                        getUtils().log("Successfully loaded "+songFileName,null,featureEnum);
+                        getUtils().log("Successfully loaded "+songFilename,null,featureEnum);
                         player.playTrack(track);
                     }
 
@@ -110,7 +186,7 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
 
                     @Override
                     public void loadFailed(FriendlyException exception) {
-                        getUtils().log("Failed loading "+songFileName,null,featureEnum);
+                        getUtils().log("Failed loading "+songFilename,null,featureEnum);
                         playNextSong(attempts+1);
                     }
                 });
@@ -121,24 +197,77 @@ public final class PlaylistFeature extends HopperBotCommandFeature implements Au
         }
     }
 
+    private Map<String,TreeSet<String>> songsByAuthor() {
+        final Map<String,TreeSet<String>> authorFields = new HashMap<>();
+        songData.values().forEach((song) -> {
+            String songTitle = song.get("Title").textValue();
+            final String author = song.get("Authors").get(0).textValue();
+            if (!authorFields.containsKey(author)) {
+                authorFields.put(author,new TreeSet<>());
+            }
+            authorFields.get(author).add(songTitle);
+        });
+        return authorFields;
+    }
+    private List<Map.Entry<String,TreeSet<String>>> sortedSongsByAuthor() {
+        return new ArrayList<>(songsByAuthor().entrySet()).stream().sorted((firstEntry, secondEntry) -> {
+            final int sizeDifference = secondEntry.getValue().size() - firstEntry.getValue().size();
+            if (sizeDifference == 0) {
+                return firstEntry.getKey().compareTo(secondEntry.getKey());
+            }
+            return sizeDifference;
+        }).toList();
+    }
+
+    private List<Integer> songlistPages(List<Map.Entry<String,TreeSet<String>>> authorFields) {
+        final List<Integer> pages = new ArrayList<>();
+        final AtomicInteger lines = new AtomicInteger();
+        final AtomicInteger authors = new AtomicInteger();
+        authorFields.forEach(entry -> {
+            authors.incrementAndGet();
+            if (lines.addAndGet(entry.getValue().size()) > SONGLIST_MAX_LINES) {
+                pages.add(authors.get());
+                lines.set(0);
+            }
+        });
+        return pages;
+    }
+    private EmbedBuilder songlistEmbedBase(int pageIndex,int maxPages) {
+        return getUtils().getEmbedBase().setTitle("Playlist - Page "+(pageIndex+1)+"/"+(maxPages+1));
+    }
+
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
 
-        final JsonNode songsDataNode = getUtils().getYAMLFile(featureEnum, songsDataFileLocation, JsonNode.class);
-        if (songsDataNode != null) {
-            songsDataNode.fields().forEachRemaining(song -> {
-                songData.put(song.getKey(),new HashMap<>());
-                song.getValue().fields().forEachRemaining(songProperty -> {
-                    songData.get(song.getKey()).put(songProperty.getKey(),songProperty.getValue());
-                });
-            });
-            songFilenames = songData.keySet();
-            getUtils().log("Serialized songs",null,featureEnum);
-
-            player.addListener(this);
-            playNextSong(0);
+        final JsonNode songsDataNode = getUtils().getYAMLFile(featureEnum, SONGS_FILE_LOC, JsonNode.class);
+        if (songsDataNode == null) {
+            return;
         }
+
+        songsDataNode.fields().forEachRemaining(song -> {
+            songData.put(song.getKey(),new HashMap<>());
+            song.getValue().fields().forEachRemaining(songProperty -> {
+                songData.get(song.getKey()).put(songProperty.getKey(),songProperty.getValue());
+            });
+        });
+        songFilenames = songData.keySet();
+        getUtils().log("Serialized songs",null,featureEnum);
+
+        player.addListener(this);
+        playNextSong(0);
+
+        final List<Map.Entry<String,TreeSet<String>>> authorFields = sortedSongsByAuthor();
+        final List<Integer> pages = songlistPages(authorFields);
+        final AtomicReference<EmbedBuilder> embedBuilder = new AtomicReference<>(songlistEmbedBase(0,pages.size()));
+        for (int authors = 0; authors < authorFields.size(); authors++) {
+            if (pages.contains(authors)) {
+                songlistPages.add(embedBuilder.get().build());
+                embedBuilder.set(songlistEmbedBase(songlistPages.size(),pages.size()));
+            }
+            embedBuilder.get().addField(authorFields.get(authors).getKey(),String.join("\n",authorFields.get(authors).getValue()),false);
+        }
+        songlistPages.add(embedBuilder.get().build());
     }
 
     @Override

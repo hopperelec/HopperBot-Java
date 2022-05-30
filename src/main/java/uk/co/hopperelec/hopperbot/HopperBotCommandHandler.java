@@ -3,6 +3,7 @@ package uk.co.hopperelec.hopperbot;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -12,10 +13,7 @@ import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.regex.Pattern.quote;
@@ -37,23 +35,21 @@ public class HopperBotCommandHandler extends ListenerAdapter {
             final Guild guild = event.getMessage().getGuild();
             final String originalContent = event.getMessage().getContentRaw();
             for (HopperBotCommandFeature feature : features) {
-                if (feature.guilds.contains(guild)) {
-                    if (originalContent.startsWith(feature.commandPrefix)) {
-                        for (HopperBotCommand command : feature.commands) {
-                            for (String name : command.aliases) {
-                                final String content = originalContent.replaceFirst("^"+quote(feature.commandPrefix+name), "");
-                                if (!content.equals(originalContent)) {
-                                    for (CommandUsageFilter filter : command.filters) {
-                                        if (filter.manualCheck(event.getMember(),content,feature)) {
-                                            getUtils().log(event.getAuthor().getId()+" tried to use text command "+feature.commandPrefix+name+" at message "+event.getMessageId()+" but failed usage filter "+filter.name(),guild,feature.featureEnum);
-                                            event.getMessage().reply("You cannot use this command here!").queue(message -> message.delete().queueAfter(5L, TimeUnit.SECONDS));
-                                            return;
-                                        }
+                if (feature.guilds.contains(guild) && originalContent.startsWith(feature.commandPrefix)) {
+                    for (HopperBotCommand command : feature.commands) {
+                        for (String name : command.aliases) {
+                            final String content = originalContent.replaceFirst("^"+quote(feature.commandPrefix+name), "");
+                            if (!content.equals(originalContent)) {
+                                for (CommandUsageFilter filter : command.filters) {
+                                    if (filter.manualCheck(event.getMember(),content,feature)) {
+                                        getUtils().log(event.getAuthor().getId()+" tried to use text command "+feature.commandPrefix+name+" at message "+event.getMessageId()+" but failed usage filter "+filter.name(),guild,feature.featureEnum);
+                                        event.getMessage().reply("You cannot use this command here!").queue(message -> message.delete().queueAfter(5L, TimeUnit.SECONDS));
+                                        return;
                                     }
-                                    getUtils().log(event.getAuthor().getId()+" successfully used text command "+feature.commandPrefix+name+" at message "+event.getMessageId(),guild,feature.featureEnum);
-                                    command.runTextCommand(event,content,feature,getUtils());
-                                    return;
                                 }
+                                getUtils().log(event.getAuthor().getId()+" successfully used text command "+feature.commandPrefix+name+" at message "+event.getMessageId(),guild,feature.featureEnum);
+                                command.runTextCommand(event,content,feature,getUtils());
+                                return;
                             }
                         }
                     }
@@ -80,6 +76,18 @@ public class HopperBotCommandHandler extends ListenerAdapter {
                 }
             }
         }
+    }
+
+    @Override
+    public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
+        final String[] parts = event.getComponentId().split("-");
+        Arrays.stream(features)
+                .filter(feature -> feature instanceof HopperBotButtonFeature)
+                .filter(feature -> parts[0].equals(((HopperBotButtonFeature) feature).featureButtonPrefix))
+                .findFirst().ifPresent(feature -> {
+                    getUtils().log("Button pressed", event.getGuild(), feature.featureEnum);
+                    ((HopperBotButtonFeature) feature).runButtonCommand(event,parts);
+                });
     }
 
     @Override

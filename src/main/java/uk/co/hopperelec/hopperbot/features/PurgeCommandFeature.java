@@ -1,7 +1,6 @@
 package uk.co.hopperelec.hopperbot.features;
 
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.TextChannel;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -24,7 +23,7 @@ public final class PurgeCommandFeature extends HopperBotCommandFeature {
             ) {
                 @Override
                 public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
-                    if (event.getMember() != null && event.getMember().hasPermission(Permission.MESSAGE_MANAGE)) {
+                    if (event.getMember() != null) {
                         final String limitStr = content.replace(" ", "");
                         if (limitStr.equals("")) {
                             utils.tempReply(event.getMessage(),"Please specify the number of messages to delete (up to 500)!");
@@ -69,7 +68,7 @@ public final class PurgeCommandFeature extends HopperBotCommandFeature {
                         future.get();
                     } catch (InterruptedException | ExecutionException e) {
                         reply.accept("Failed to purge some messages");
-                        getUtils().log("Failed to purge some messages: " + e.getMessage(), channel.getGuild(), featureEnum);
+                        getUtils().logToGuild("Failed to purge some messages: "+e.getMessage(),featureEnum,channel.getGuild());
                     }
                 });
                 reply.accept("Messages purged!");

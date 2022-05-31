@@ -27,7 +27,7 @@ public final class EconomyFeature extends HopperBotCommandFeature {
             final MysqlDataSource mysql = dbLogin.getDataSource();
             try (Connection conn = mysql.getConnection()) {
                 if (conn.isValid(1000)) {
-                    getUtils().log("Successfully connected to database",null,featureEnum);
+                    getUtils().logGlobally("Successfully connected to database",featureEnum);
                 } else {
                     throw new SQLException("Could not establish database connection.");
                 }

@@ -26,7 +26,7 @@ public final class LeaveMessagesFeature extends HopperBotFeature {
                         .replaceAll("\\{id}",event.getUser().getId())
                 ).queue();
             } else {
-                getUtils().log("leave_messages has not been configured for this server",event.getGuild(),featureEnum);
+                getUtils().logToGuild("leave_messages has not been configured for this server",featureEnum,event.getGuild());
             }
         }
     }

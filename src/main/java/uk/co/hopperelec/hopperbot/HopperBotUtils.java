@@ -34,25 +34,38 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         }
     }
 
-    public void log(String message, Guild guild, HopperBotFeatures hopperBotFeature) {
-        final String featureName = hopperBotFeature == null ? "main" : hopperBotFeature.name();
+    private String log(String message, HopperBotFeatures feature) {
+        final String featureName = feature == null ? "main" : feature.name();
         message = config.getLogFormat().replaceAll("\\{message}", message).replaceAll("\\{feature}", featureName);
         logger.info(message);
-        if (guild == null) {
-            for (Guild guildIter : jda.getGuilds()) {
-                logToGuild(message, guildIter);
+        return message;
+    }
+    public void logToGuild(String message, HopperBotFeatures feature, Guild guild) {
+        logToGuild(log(message,feature), guild);
+    }
+    public void logGlobally(String message, HopperBotFeatures feature) {
+        message = log(message,feature);
+        for (Guild guild : jda.getGuilds()) {
+            if (feature == null || usesFeature(guild,feature)) {
+                logToGuild(message, guild);
             }
-        } else {
-            logToGuild(message, guild);
         }
     }
 
     public Map<String, JsonNode> getFeatureConfig(Guild guild, HopperBotFeatures feature) {
-        HopperBotServerConfig serverConfig = config().getServerConfig(guild.getIdLong());
-        if (serverConfig != null) {
-            return serverConfig.getFeatureConfig(feature);
+        final HopperBotServerConfig serverConfig = config().getServerConfig(guild.getIdLong());
+        if (serverConfig == null) {
+            return null;
         }
-        return null;
+        return serverConfig.getFeatureConfig(feature);
+    }
+
+    public boolean usesFeature(Guild guild, HopperBotFeatures feature) {
+        final HopperBotServerConfig serverConfig = config().getServerConfig(guild.getIdLong());
+        if (serverConfig == null) {
+            return false;
+        }
+        return config.getServerConfig(guild.getIdLong()).usesFeature(feature);
     }
 
     public EmbedBuilder getEmbedBase() {
@@ -81,7 +94,7 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
                 logger.warn(fileLocation+" couldn't be found. An empty file has been created for you. Please enter the host, name, user and password into it");
                 return null;
             } else {
-                log("Found "+fileLocation,null,feature);
+                logGlobally("Found "+fileLocation,feature);
             }
         } catch (IOException e) {
             logger.error(fileLocation+" couldn't be found and an empty file could not be created");
@@ -96,7 +109,7 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
             logger.error("Failed to serialize {} (maybe incorrectly formatted)",fileLocation,e);
             return null;
         }
-        log("Loaded "+fileLocation,null,feature);
+        logGlobally("Loaded "+fileLocation,feature);
 
         return serializedResult;
     }

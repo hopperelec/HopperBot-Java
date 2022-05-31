@@ -42,7 +42,7 @@ public final class ServersCommandFeature extends HopperBotCommandFeature {
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         if (event.getName().equals("servers")) {
             event.replyEmbeds(embed).queue();
-            getUtils().log(event.getUser().getId()+" successfully used global slash command /servers",event.getGuild(),featureEnum);
+            getUtils().logToGuild(event.getUser().getId()+" successfully used global slash command /servers",featureEnum,event.getGuild());
         }
     }
 }

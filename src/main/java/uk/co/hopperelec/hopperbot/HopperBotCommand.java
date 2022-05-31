@@ -5,7 +5,6 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
-import net.dv8tion.jda.api.interactions.commands.privileges.CommandPrivilege;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +17,6 @@ public abstract class HopperBotCommand {
     public final Set<String> aliases = new HashSet<>();
     public final CommandUsageFilter[] filters;
     public final SlashCommandData slashCommand;
-    public final Set<CommandPrivilege> privileges = new HashSet<>();
 
     public HopperBotCommand(String name, String description, String[] aliases, OptionData[] options, CommandUsageFilter... filters) {
         this.name = name;
@@ -32,14 +30,6 @@ public abstract class HopperBotCommand {
         slashCommand = Commands.slash(name,description);
         if (options != null) {
             slashCommand.addOptions(options);
-        }
-        if (filters.length != 0) {
-            for (CommandUsageFilter filter : filters) {
-                if (!filter.autoChecks.isEmpty()) {
-                    slashCommand.setDefaultEnabled(false);
-                    privileges.addAll(filter.autoChecks);
-                }
-            }
         }
     }
 

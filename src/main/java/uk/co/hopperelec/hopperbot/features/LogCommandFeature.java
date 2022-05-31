@@ -14,7 +14,7 @@ public final class LogCommandFeature extends HopperBotCommandFeature {
                 new HopperBotCommand("log","Debugging command for logging a message",null, new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log")}) {
                     @Override
                     public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
-                        utils.log(content, null, feature.featureEnum);
+                        utils.logGlobally(content,feature.featureEnum);
                         event.getMessage().addReaction("\uD83D\uDC4D").queue();
                     }
 
@@ -22,7 +22,7 @@ public final class LogCommandFeature extends HopperBotCommandFeature {
                     public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
                         final OptionMapping optionMapping = event.getOption("content");
                         if (optionMapping != null) {
-                            utils.log(optionMapping.getAsString(), null, feature.featureEnum);
+                            utils.logGlobally(optionMapping.getAsString(),feature.featureEnum);
                             event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
                         }
                     }

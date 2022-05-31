@@ -37,7 +37,7 @@ public final class AutoVCGenFeature extends HopperBotFeature {
     }
 
     private String[] getAutoVC(VoiceChannel channel, boolean size) {
-        if (channel != null && channel.getMembers().size() == (size ? 1 : 0)) {
+        if (channel != null && channel.getMembers().size() == (size ? 1 : 0) && channelNames.containsKey(channel.getGuild())) {
             final Matcher matcher = pattern.matcher(channel.getName());
             if (matcher.matches()) {
                 final String name = matcher.group(1);
@@ -60,7 +60,7 @@ public final class AutoVCGenFeature extends HopperBotFeature {
                 final List<VoiceChannel> nextChannels = channel.getGuild().getVoiceChannelsByName(autoVCLeft[0]+" "+(++count),false);
                 if (nextChannels.size() != 1) {
                     if (nextChannels.size() != 0) {
-                        getUtils().log("Multiple channels by name '"+autoVCLeft[0]+" "+count+"' in guild. Please only keep one.",channel.getGuild(),featureEnum);
+                        getUtils().logToGuild("Multiple channels by name '"+autoVCLeft[0]+" "+count+"' in guild. Please only keep one.",featureEnum,channel.getGuild());
                     }
                     break;
                 }

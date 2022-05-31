@@ -18,7 +18,7 @@ public class EconomyAddon extends ListenerAdapter {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        getUtils().log("Addon '"+addonEnum+"' loaded",null,featureEnum);
+        getUtils().logGlobally("Addon '"+addonEnum+"' loaded",featureEnum);
     }
 
     protected final HopperBotUtils getUtils() {

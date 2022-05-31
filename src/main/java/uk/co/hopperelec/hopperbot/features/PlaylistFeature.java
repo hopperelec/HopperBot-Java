@@ -16,12 +16,11 @@ import com.sedmelluq.discord.lavaplayer.track.playback.AudioFrame;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.audio.AudioSendHandler;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Emoji;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -46,16 +45,34 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     private static final String SONGS_DIR_LOC = "Playlist/";
     private static final String ABSOLUTE_SONGS_DIR_LOC = FileSystems.getDefault().getPath(SONGS_DIR_LOC).toAbsolutePath().toString();
     private static final int SONGLIST_MAX_LINES = 31;
+    private static final int MAX_NEXT_SONG_ATTEMPTS = 5;
+
     private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
     private Set<String> songFilenames;
     private final List<String> lastThreeSongs = new ArrayList<>(3);
-    private static final int maxNextSongAttempts = 5;
     private final List<MessageEmbed> songlistPages = new ArrayList<>();
     private final Random random = new Random();
-    private final AudioPlayerManager playerManager;
-    private final AudioPlayer player;
-    private final AudioSendHandler sendHandler;
+
+    private boolean anyoneListening = false;
+    private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    private final AudioPlayer player = playerManager.createPlayer();
     private AudioFrame frame;
+    private final AudioSendHandler sendHandler = new AudioSendHandler() {
+        @Override
+        public boolean canProvide() {
+            return frame != null;
+        }
+
+        @Override
+        public ByteBuffer provide20MsAudio() {
+            return ByteBuffer.wrap(frame.getData());
+        }
+
+        @Override
+        public boolean isOpus() {
+            return true;
+        }
+    };
 
     public PlaylistFeature(JDABuilder builder) {
         super("playlist",builder,HopperBotFeatures.PLAYLIST,"~",
@@ -73,26 +90,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                     }
                 }
         );
-        playerManager = new DefaultAudioPlayerManager();
-        player = playerManager.createPlayer();
         playerManager.registerSourceManager(new LocalAudioSourceManager());
-
-        sendHandler = new AudioSendHandler() {
-            @Override
-            public boolean canProvide() {
-                return frame != null;
-            }
-
-            @Override
-            public ByteBuffer provide20MsAudio() {
-                return ByteBuffer.wrap(frame.getData());
-            }
-
-            @Override
-            public boolean isOpus() {
-                return true;
-            }
-        };
         newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
     }
 
@@ -137,64 +135,76 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     @Override
     public void onEvent(AudioEvent event) {
         if (event instanceof TrackEndEvent && ((TrackEndEvent) event).endReason.mayStartNext) {
-            playNextSong(0);
+            playNextSong();
         }
     }
 
-    public void playNextSong(int attempts) {
-        if (attempts < maxNextSongAttempts) {
-            String next = "";
-            boolean loop = true;
-            while (loop) {
-                final Iterator<String> iterator = songFilenames.iterator();
-                for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
-                    iterator.next();
-                }
-                next = iterator.next();
-                if (!lastThreeSongs.contains(next)) {
-                    loop = false;
-                }
-            }
-            final String songFilename = next;
-            lastThreeSongs.add(songFilename);
-            if (lastThreeSongs.size() == 4) {
-                lastThreeSongs.remove(0);
-            }
-
-            synchronized (this) {
-                getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFilename)));
-                getUtils().log("Now trying to play "+songFilename,null,featureEnum);
-
-                final String songFileLocation = ABSOLUTE_SONGS_DIR_LOC+File.separator+songFilename;
-                playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
-                    @Override
-                    public void trackLoaded(AudioTrack track) {
-                        getUtils().log("Successfully loaded "+songFilename,null,featureEnum);
-                        player.playTrack(track);
-                    }
-
-                    @Override
-                    public void playlistLoaded(AudioPlaylist playlist) {
-                        // Only individual tracks are loaded; playlists are not expected
-                    }
-
-                    @Override
-                    public void noMatches() {
-                        getUtils().log("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),null,featureEnum);
-                        playNextSong(attempts+1);
-                    }
-
-                    @Override
-                    public void loadFailed(FriendlyException exception) {
-                        getUtils().log("Failed loading "+songFilename,null,featureEnum);
-                        playNextSong(attempts+1);
-                    }
-                });
+    private void playNextSong(int attempts) {
+        if (attempts < MAX_NEXT_SONG_ATTEMPTS) {
+            if (anyoneListening) {
+                playSong(nextSong(), attempts);
+                return;
+            } else {
+                getUtils().logGlobally("Nobody currently listening- pausing playback",featureEnum);
             }
         } else {
-            getUtils().log("Maximum attempts at playing the next song ("+maxNextSongAttempts+") reached",null,featureEnum);
-            getUtils().jda().getPresence().setActivity(null);
+            getUtils().logGlobally("Maximum attempts at playing the next song ("+MAX_NEXT_SONG_ATTEMPTS+") reached",featureEnum);
         }
+        getUtils().jda().getPresence().setActivity(null);
+    }
+    private void playNextSong() {
+        playNextSong(0);
+    }
+
+    private String nextSong() {
+        String song = "";
+        boolean loop = true;
+        while (loop) {
+            final Iterator<String> iterator = songFilenames.iterator();
+            for (int i = 0; i < random.nextInt(songFilenames.size()); i++) {
+                iterator.next();
+            }
+            song = iterator.next();
+            if (!lastThreeSongs.contains(song)) {
+                loop = false;
+            }
+        }
+        lastThreeSongs.add(song);
+        if (lastThreeSongs.size() == 4) {
+            lastThreeSongs.remove(0);
+        }
+        return song;
+    }
+
+    private synchronized void playSong(String songFilename, int attempts) {
+        getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFilename)));
+        getUtils().logGlobally("Now trying to play "+songFilename,featureEnum);
+
+        final String songFileLocation = ABSOLUTE_SONGS_DIR_LOC+File.separator+songFilename;
+        playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
+            @Override
+            public void trackLoaded(AudioTrack track) {
+                getUtils().logGlobally("Successfully loaded "+songFilename,featureEnum);
+                player.playTrack(track);
+            }
+
+            @Override
+            public void playlistLoaded(AudioPlaylist playlist) {
+                // Only individual tracks are loaded; playlists are not expected
+            }
+
+            @Override
+            public void noMatches() {
+                getUtils().logGlobally("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),featureEnum);
+                playNextSong(attempts+1);
+            }
+
+            @Override
+            public void loadFailed(FriendlyException exception) {
+                getUtils().logGlobally("Failed loading "+songFilename,featureEnum);
+                playNextSong(attempts+1);
+            }
+        });
     }
 
     private Map<String,TreeSet<String>> songsByAuthor() {
@@ -252,10 +262,11 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
             });
         });
         songFilenames = songData.keySet();
-        getUtils().log("Serialized songs",null,featureEnum);
-
+        getUtils().logGlobally("Serialized songs",featureEnum);
         player.addListener(this);
-        playNextSong(0);
+        if (anyoneListening) {
+            playNextSong();
+        }
 
         final List<Map.Entry<String,TreeSet<String>>> authorFields = sortedSongsByAuthor();
         final List<Integer> pages = songlistPages(authorFields);
@@ -270,18 +281,46 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         songlistPages.add(embedBuilder.get().build());
     }
 
+    private VoiceChannel getVoiceChannelFor(Guild guild) {
+        final Map<String, JsonNode> config = getUtils().getFeatureConfig(guild,featureEnum);
+        if (config == null) {
+            return null;
+        }
+        return guild.getVoiceChannelById(config.get("voice_channel").asLong());
+    }
+
+    private boolean isAnyoneListening(VoiceChannel voiceChannel) {
+        if (voiceChannel == null) {
+            return false;
+        }
+        return voiceChannel.getMembers().stream().anyMatch(member -> !member.getUser().isBot());
+    }
+
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
-        final Map<String, JsonNode> config = getUtils().getFeatureConfig(event.getGuild(),featureEnum);
-        if (config != null) {
-            final long id = config.get("voice_channel").asLong();
-            final VoiceChannel voiceChannel = event.getGuild().getVoiceChannelById(id);
-            if (voiceChannel == null) {
-                getUtils().log("Could not find voice channel by ID "+id,event.getGuild(),featureEnum);
-            } else {
-                event.getGuild().getAudioManager().openAudioConnection(voiceChannel);
-                event.getGuild().getAudioManager().setSendingHandler(sendHandler);
-            }
+        final VoiceChannel voiceChannel = getVoiceChannelFor(event.getGuild());
+        if (voiceChannel == null) {
+            getUtils().logToGuild("Could not find playlist voice channel",event.getGuild());
+        } else {
+            event.getGuild().getAudioManager().openAudioConnection(voiceChannel);
+            event.getGuild().getAudioManager().setSendingHandler(sendHandler);
+            anyoneListening = isAnyoneListening(voiceChannel);
+        }
+    }
+
+    @Override
+    public void onGuildVoiceJoin(@NotNull GuildVoiceJoinEvent event) {
+        final boolean wasListening = anyoneListening;
+        anyoneListening = isAnyoneListening(getVoiceChannelFor(event.getGuild()));
+        if (!wasListening && anyoneListening) {
+            playNextSong();
+        }
+    }
+
+    @Override
+    public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
+        if (getUtils().usesFeature(event.getGuild(),featureEnum)) {
+            anyoneListening = guilds.stream().anyMatch(guild -> isAnyoneListening(getVoiceChannelFor(guild)));
         }
     }
 }

@@ -139,6 +139,10 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         }
     }
 
+    private void unsetPresence() {
+        getUtils().jda().getPresence().setActivity(null);
+    }
+
     private void playNextSong(int attempts) {
         if (attempts < MAX_NEXT_SONG_ATTEMPTS) {
             if (anyoneListening) {
@@ -150,7 +154,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         } else {
             getUtils().logGlobally("Maximum attempts at playing the next song ("+MAX_NEXT_SONG_ATTEMPTS+") reached",featureEnum);
         }
-        getUtils().jda().getPresence().setActivity(null);
+        unsetPresence();
     }
     private void playNextSong() {
         playNextSong(0);
@@ -321,6 +325,10 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
         if (getUtils().usesFeature(event.getGuild(),featureEnum)) {
             anyoneListening = guilds.stream().anyMatch(guild -> isAnyoneListening(getVoiceChannelFor(guild)));
+            if (!anyoneListening) {
+                player.stopTrack();
+                unsetPresence();
+            }
         }
     }
 }

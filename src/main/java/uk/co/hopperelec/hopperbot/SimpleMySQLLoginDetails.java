@@ -2,8 +2,13 @@ package uk.co.hopperelec.hopperbot;
 
 import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
 import com.mysql.cj.jdbc.MysqlDataSource;
+import org.jetbrains.annotations.NotNull;
 
-public record SimpleMySQLLoginDetails(String host, String name, String user, String password) {
+import javax.annotation.CheckReturnValue;
+
+public record SimpleMySQLLoginDetails(@NotNull String host, @NotNull String name, @NotNull String user, @NotNull String password) {
+    @NotNull
+    @CheckReturnValue
     public MysqlDataSource getDataSource() {
         final MysqlDataSource mysql = new MysqlConnectionPoolDataSource();
         mysql.setServerName(host());

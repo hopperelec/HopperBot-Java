@@ -5,6 +5,8 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -12,13 +14,13 @@ import java.util.Set;
 import static java.util.Arrays.asList;
 
 public abstract class HopperBotCommand {
-    public final String name;
-    public final String description;
-    public final Set<String> aliases = new HashSet<>();
+    @NotNull public final String name;
+    @NotNull public final String description;
+    @NotNull public final Set<String> aliases = new HashSet<>();
     public final CommandUsageFilter[] filters;
-    public final SlashCommandData slashCommand;
+    @NotNull public final SlashCommandData slashCommand;
 
-    public HopperBotCommand(String name, String description, String[] aliases, OptionData[] options, CommandUsageFilter... filters) {
+    public HopperBotCommand(@NotNull String name, @NotNull String description, @Nullable String[] aliases, @Nullable OptionData[] options, CommandUsageFilter... filters) {
         this.name = name;
         this.description = description;
         this.aliases.add(name);
@@ -33,6 +35,6 @@ public abstract class HopperBotCommand {
         }
     }
 
-    public abstract void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils);
-    public abstract void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils);
+    public abstract void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils);
+    public abstract void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils);
 }

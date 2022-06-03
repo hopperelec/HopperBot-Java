@@ -7,11 +7,11 @@ import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.HopperBotUtils;
 
 public class EconomyAddon extends ListenerAdapter {
-    public final EconomyAddons addonEnum;
-    public final HopperBotFeatures featureEnum = HopperBotFeatures.ECONOMY;
+    @NotNull public final EconomyAddons addonEnum;
+    @NotNull public final HopperBotFeatures featureEnum = HopperBotFeatures.ECONOMY;
     protected final EconomyFeature economyFeature;
 
-    public EconomyAddon(EconomyFeature economyFeature, EconomyAddons addonEnum) {
+    public EconomyAddon(@NotNull EconomyFeature economyFeature, @NotNull EconomyAddons addonEnum) {
         this.economyFeature = economyFeature;
         this.addonEnum = addonEnum;
     }

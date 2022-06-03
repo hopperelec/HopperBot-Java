@@ -17,9 +17,9 @@ import java.util.concurrent.TimeUnit;
 import static java.util.regex.Pattern.quote;
 
 public class HopperBotCommandHandler extends ListenerAdapter {
-    private final HopperBotCommandFeature[] features;
+    @NotNull private final HopperBotCommandFeature[] features;
 
-    public HopperBotCommandHandler(Set<HopperBotCommandFeature> features) {
+    public HopperBotCommandHandler(@NotNull Set<HopperBotCommandFeature> features) {
         this.features = features.toArray(new HopperBotCommandFeature[0]);
     }
 
@@ -28,7 +28,7 @@ public class HopperBotCommandHandler extends ListenerAdapter {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (!event.getMessage().getAuthor().isBot() && event.getMessage().getMember() != null) {
             final Guild guild = event.getMessage().getGuild();
             final String originalContent = event.getMessage().getContentRaw();

@@ -6,9 +6,9 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class HopperBotFeature extends ListenerAdapter {
-    public final HopperBotFeatures featureEnum;
+    @NotNull public final HopperBotFeatures featureEnum;
 
-    protected HopperBotFeature(JDABuilder builder, HopperBotFeatures featureEnum) {
+    protected HopperBotFeature(@NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum) {
         this.featureEnum = featureEnum;
         builder.addEventListeners(this);
     }

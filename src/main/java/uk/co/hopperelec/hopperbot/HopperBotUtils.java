@@ -8,9 +8,12 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -22,7 +25,7 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     private static HopperBotUtils instance;
     public static final long BOT_OWNER_ID = 348083986989449216L;
 
-    public void logToGuild(String message, Guild guild) {
+    public void logToGuild(@NotNull String message, @NotNull Guild guild) {
         final HopperBotServerConfig guildConfig = config.getServerConfig(guild.getIdLong());
         if (guildConfig != null) {
             final long channelId = guildConfig.getLogChannel();
@@ -35,16 +38,20 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         }
     }
 
-    private String log(String message, HopperBotFeatures feature) {
+    @NotNull
+    private String log(@NotNull String message, @Nullable HopperBotFeatures feature) {
         final String featureName = feature == null ? "main" : feature.name();
         message = config.getLogFormat().replaceAll("\\{message}", message).replaceAll("\\{feature}", featureName);
         logger.info(message);
         return message;
     }
-    public void logToGuild(String message, HopperBotFeatures feature, Guild guild) {
-        logToGuild(log(message,feature), guild);
+    public void logToGuild(@NotNull String message, @Nullable HopperBotFeatures feature, @Nullable Guild guild) {
+        message = log(message,feature);
+        if (guild != null) {
+            logToGuild(message, guild);
+        }
     }
-    public void logGlobally(String message, HopperBotFeatures feature) {
+    public void logGlobally(@NotNull String message, @Nullable HopperBotFeatures feature) {
         message = log(message,feature);
         for (Guild guild : jda.getGuilds()) {
             if (feature == null || usesFeature(guild,feature)) {
@@ -53,7 +60,9 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         }
     }
 
-    public Map<String, JsonNode> getFeatureConfig(Guild guild, HopperBotFeatures feature) {
+    @Nullable
+    @CheckReturnValue
+    public Map<String, JsonNode> getFeatureConfig(@NotNull Guild guild, @NotNull HopperBotFeatures feature) {
         final HopperBotServerConfig serverConfig = config().getServerConfig(guild.getIdLong());
         if (serverConfig == null) {
             return null;
@@ -61,7 +70,8 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         return serverConfig.getFeatureConfig(feature);
     }
 
-    public boolean usesFeature(Guild guild, HopperBotFeatures feature) {
+    @CheckReturnValue
+    public boolean usesFeature(@NotNull Guild guild, @NotNull HopperBotFeatures feature) {
         final HopperBotServerConfig serverConfig = config().getServerConfig(guild.getIdLong());
         if (serverConfig == null) {
             return false;
@@ -69,6 +79,8 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         return config.getServerConfig(guild.getIdLong()).usesFeature(feature);
     }
 
+    @NotNull
+    @CheckReturnValue
     public EmbedBuilder getEmbedBase() {
         return new EmbedBuilder().setFooter("Made by hopperelec#3060").setColor(0xe31313);
     }
@@ -88,7 +100,9 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         }
     }
 
-    public <T> T getYAMLFile(HopperBotFeatures feature, String fileLocation, Class<T> serializedClass) {
+    @Nullable
+    @CheckReturnValue
+    public <T> T getYAMLFile(@NotNull  HopperBotFeatures feature, @NotNull String fileLocation, @NotNull  Class<T> serializedClass) {
         final File file = Paths.get(System.getProperty("user.dir"),fileLocation).toFile();
         try {
             if (file.createNewFile()) {

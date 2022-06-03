@@ -34,6 +34,9 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.*;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.CheckReturnValue;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.file.FileSystems;
@@ -46,24 +49,24 @@ import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static uk.co.hopperelec.hopperbot.HopperBotUtils.BOT_OWNER_ID;
 
 public final class PlaylistFeature extends HopperBotButtonFeature implements AudioEventListener {
-    private static final String SONGS_FILE_LOC = "Playlist/songs.yml";
-    private static final String SONGS_DIR_LOC = "Playlist/";
-    private static final String ABSOLUTE_SONGS_DIR_LOC = FileSystems.getDefault().getPath(SONGS_DIR_LOC).toAbsolutePath().toString();
+    @NotNull private static final String SONGS_FILE_LOC = "Playlist/songs.yml";
+    @NotNull private static final String SONGS_DIR_LOC = "Playlist/";
+    @NotNull private static final String ABSOLUTE_SONGS_DIR_LOC = FileSystems.getDefault().getPath(SONGS_DIR_LOC).toAbsolutePath().toString();
     private static final int SONGLIST_MAX_LINES = 31;
     private static final int MAX_NEXT_SONG_ATTEMPTS = 5;
 
-    private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
+    @NotNull private final Map<String, Map<String,JsonNode>> songData = new HashMap<>();
     private Set<String> songFilenames;
-    private final List<String> lastThreeSongs = new ArrayList<>(3);
-    private final List<MessageEmbed> songlistPages = new ArrayList<>();
-    private final Random random = new Random();
-    private final JaroWinklerSimilarity jaroWinklerSimilarity = new JaroWinklerSimilarity();
+    @NotNull private final List<String> lastThreeSongs = new ArrayList<>(3);
+    @NotNull private final List<MessageEmbed> songlistPages = new ArrayList<>();
+    @NotNull private final Random random = new Random();
+    @NotNull private final JaroWinklerSimilarity jaroWinklerSimilarity = new JaroWinklerSimilarity();
 
     private boolean anyoneListening = false;
-    private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
-    private final AudioPlayer player = playerManager.createPlayer();
+    @NotNull private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+    @NotNull private final AudioPlayer player = playerManager.createPlayer();
     private AudioFrame frame;
-    private final AudioSendHandler sendHandler = new AudioSendHandler() {
+    @NotNull private final AudioSendHandler sendHandler = new AudioSendHandler() {
         @Override
         public boolean canProvide() {
             return frame != null;
@@ -80,17 +83,17 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         }
     };
 
-    public PlaylistFeature(JDABuilder builder) {
+    public PlaylistFeature(@NotNull JDABuilder builder) {
         super("playlist",builder,HopperBotFeatures.PLAYLIST,"~",
                 new HopperBotCommand("songlist","Shows list of songs currently in the playlist",new String[]{"playlist"},null) {
                     @Override
-                    public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         event.getMessage().replyEmbeds(self.songlistPages.get(0)).setActionRow(self.getSonglistButtons(1)).queue();
                     }
 
                     @Override
-                    public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         event.replyEmbeds(self.songlistPages.get(0)).addActionRow(self.getSonglistButtons(1)).queue();
                     }
@@ -99,12 +102,12 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                         CommandUsageFilter.NON_EMPTY_CONTENT
                 ) {
                     @Override
-                    public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                         event.getMessage().reply(((PlaylistFeature) feature).playSongCommand(event.getAuthor(),content)).queue();
                     }
 
                     @Override
-                    public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                         final OptionMapping optionMapping = event.getOption("search");
                         if (optionMapping != null) {
                             event.reply(((PlaylistFeature) feature).playSongCommand(event.getUser(),optionMapping.getAsString())).queue();
@@ -116,7 +119,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
     }
 
-    private boolean onlyPersonListening(User user) {
+    @CheckReturnValue
+    private boolean onlyPersonListening(@NotNull User user) {
         boolean selfFound = false;
         for (Guild guild : guilds) {
             final VoiceChannel voiceChannel = getVoiceChannelFor(guild);
@@ -137,7 +141,9 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return selfFound;
     }
 
-    private Map.Entry<String,Double> searchSongs(String search) {
+    @NotNull
+    @CheckReturnValue
+    private Map.Entry<String,Double> searchSongs(@NotNull String search) {
         final Map<String,Double> results = new HashMap<>();
         for (String songFilename : songFilenames) {
             results.put(songFilename, jaroWinklerSimilarity.apply(search,songFilename));
@@ -145,7 +151,9 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return Collections.max(results.entrySet(), Comparator.comparingDouble(Map.Entry::getValue));
     }
 
-    private String playSongCommand(User user, String search) {
+    @NotNull
+    @CheckReturnValue
+    private String playSongCommand(@NotNull User user, @NotNull String search) {
         if (user.getIdLong() == BOT_OWNER_ID || onlyPersonListening(user)) {
             final Map.Entry<String,Double> searchResult = searchSongs(search);
             if (searchResult.getValue() < 0.7) {
@@ -157,13 +165,17 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return "You can only play a song if you're the only person listening to the playlist";
     }
 
-    private Button songlistButton(String action, String emojiUnicode, boolean disabled) {
+    @NotNull
+    @CheckReturnValue
+    private Button songlistButton(@NotNull String action, @NotNull String emojiUnicode, boolean disabled) {
         final Button button = Button.of(ButtonStyle.PRIMARY,"playlist-songlist-"+action, Emoji.fromUnicode(emojiUnicode));
         if (disabled) {
             return button.asDisabled();
         }
         return button;
     }
+    @NotNull
+    @CheckReturnValue
     private List<Button> getSonglistButtons(int currentPage) {
         boolean prev = currentPage == 1;
         boolean next = currentPage == songlistPages.size();
@@ -175,7 +187,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         );
     }
 
-    private int getSonglistPageNumber(ButtonInteractionEvent event) {
+    @CheckReturnValue
+    private int getSonglistPageNumber(@NotNull ButtonInteractionEvent event) {
         final String title = event.getMessage().getEmbeds().get(0).getTitle();
         if (title == null) {
             return -1;
@@ -183,7 +196,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         final String[] titleWords = title.split(" ");
         return Integer.parseInt(titleWords[titleWords.length-1].split("/")[0]);
     }
-    public void runButtonCommand(ButtonInteractionEvent event,String[] parts) {
+    public void runButtonCommand(@NotNull ButtonInteractionEvent event, String[] parts) {
         if (parts[1].equals("songlist")) {
             final int newPage = switch (parts[2]) {
                 default -> 1;
@@ -196,7 +209,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     @Override
-    public void onEvent(AudioEvent event) {
+    public void onEvent(@NotNull AudioEvent event) {
         if (event instanceof TrackEndEvent && ((TrackEndEvent) event).endReason.mayStartNext) {
             playNextSong();
         }
@@ -223,6 +236,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         playNextSong(0);
     }
 
+    @NotNull
+    @CheckReturnValue
     private String nextSong() {
         String song = "";
         boolean loop = true;
@@ -243,7 +258,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return song;
     }
 
-    private synchronized void playSong(String songFilename, int attempts) {
+    private synchronized void playSong(@NotNull String songFilename, int attempts) {
         getUtils().jda().getPresence().setActivity(Activity.listening(FilenameUtils.removeExtension(songFilename)));
         getUtils().logGlobally("Now trying to play "+songFilename,featureEnum);
 
@@ -274,6 +289,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         });
     }
 
+    @NotNull
+    @CheckReturnValue
     private Map<String,TreeSet<String>> songsByAuthor() {
         final Map<String,TreeSet<String>> authorFields = new HashMap<>();
         songData.values().forEach((song) -> {
@@ -286,6 +303,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         });
         return authorFields;
     }
+    @NotNull
+    @CheckReturnValue
     private List<Map.Entry<String,TreeSet<String>>> sortedSongsByAuthor() {
         return new ArrayList<>(songsByAuthor().entrySet()).stream().sorted((firstEntry, secondEntry) -> {
             final int sizeDifference = secondEntry.getValue().size() - firstEntry.getValue().size();
@@ -296,7 +315,9 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         }).toList();
     }
 
-    private List<Integer> songlistPages(List<Map.Entry<String,TreeSet<String>>> authorFields) {
+    @NotNull
+    @CheckReturnValue
+    private List<Integer> songlistPages(@NotNull List<Map.Entry<String,TreeSet<String>>> authorFields) {
         final List<Integer> pages = new ArrayList<>();
         final AtomicInteger lines = new AtomicInteger();
         final AtomicInteger authors = new AtomicInteger();
@@ -309,6 +330,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         });
         return pages;
     }
+    @NotNull
+    @CheckReturnValue
     private EmbedBuilder songlistEmbedBase(int pageIndex,int maxPages) {
         return getUtils().getEmbedBase().setTitle("Playlist - Page "+(pageIndex+1)+"/"+(maxPages+1));
     }
@@ -348,7 +371,10 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         songlistPages.add(embedBuilder.get().build());
     }
 
-    private VoiceChannel getVoiceChannelFor(Guild guild) {
+    @Nullable
+    @CheckForNull
+    @CheckReturnValue
+    private VoiceChannel getVoiceChannelFor(@NotNull Guild guild) {
         final Map<String, JsonNode> config = getUtils().getFeatureConfig(guild,featureEnum);
         if (config == null) {
             return null;
@@ -356,15 +382,18 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return guild.getVoiceChannelById(config.get("voice_channel").asLong());
     }
 
+    @CheckReturnValue
     private boolean isAnyoneListeningIn(VoiceChannel voiceChannel) {
         if (voiceChannel == null) {
             return false;
         }
         return voiceChannel.getMembers().stream().anyMatch(member -> !member.getUser().isBot());
     }
-    private boolean isAnyoneListeningIn(Guild guild) {
+    @CheckReturnValue
+    private boolean isAnyoneListeningIn(@NotNull Guild guild) {
         return isAnyoneListeningIn(getVoiceChannelFor(guild));
     }
+    @CheckReturnValue
     private boolean findAnyoneListeningAtAll() {
         return anyoneListening = guilds.stream().anyMatch(this::isAnyoneListeningIn);
     }

@@ -14,7 +14,7 @@ import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 public final class ServersCommandFeature extends HopperBotCommandFeature {
     private MessageEmbed embed;
 
-    public ServersCommandFeature(JDABuilder builder) {
+    public ServersCommandFeature(@NotNull JDABuilder builder) {
         super(builder,HopperBotFeatures.SERVER_LIST,"?");
     }
 
@@ -32,7 +32,7 @@ public final class ServersCommandFeature extends HopperBotCommandFeature {
     }
 
     @Override
-    public void onMessageReceived(MessageReceivedEvent event) {
+    public void onMessageReceived(@NotNull MessageReceivedEvent event) {
         if (event.getMessage().getContentRaw().matches("^(\\?)servers")) {
             event.getMessage().replyEmbeds(embed).queue();
         }

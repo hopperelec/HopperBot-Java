@@ -6,9 +6,11 @@ import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.CheckReturnValue;
 import javax.security.auth.login.LoginException;
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +39,7 @@ public final class HopperBot {
         }
     }
 
+    @CheckReturnValue
     private static String getToken() throws HopperBotLoadingException {
         try {
             return Files.readString(Paths.get(TOKEN_FILE_NAME));
@@ -45,7 +48,7 @@ public final class HopperBot {
         }
     }
 
-    private static void createConfig(Path configPath) throws HopperBotLoadingException {
+    private static void createConfig(@NotNull Path configPath) throws HopperBotLoadingException {
         final InputStream configStream = getResourceStream(CONFIG_RESOURCE_PATH);
         try {
             Files.copy(configStream,configPath);
@@ -54,9 +57,10 @@ public final class HopperBot {
         }
     }
 
-    private static HopperBotConfig readConfig(File configFile) throws HopperBotLoadingException {
+    @CheckReturnValue
+    private static HopperBotConfig readConfig(@NotNull File configFile) throws HopperBotLoadingException {
         try {
-            YAMLMapper objectMapper = YAMLMapper.builder().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).build();
+            final YAMLMapper objectMapper = YAMLMapper.builder().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).build();
             objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
             return objectMapper.readValue(configFile, HopperBotConfig.class);
         } catch (IOException e) {
@@ -64,7 +68,7 @@ public final class HopperBot {
         }
     }
 
-    private static void initializeFeatures(HopperBotConfig config, JDABuilder builder) {
+    private static void initializeFeatures(@NotNull HopperBotConfig config, @NotNull JDABuilder builder) {
         final Set<HopperBotCommandFeature> commandFeatures = new HashSet<>();
         for (HopperBotFeatures feature : config.getEnabledFeatures()) {
             if (feature.handler != null) {
@@ -81,7 +85,9 @@ public final class HopperBot {
         builder.addEventListeners(new HopperBotCommandHandler(commandFeatures));
     }
 
-    public static InputStream getResourceStream(String path) throws HopperBotLoadingException {
+    @NotNull
+    @CheckReturnValue
+    public static InputStream getResourceStream(@NotNull String path) throws HopperBotLoadingException {
         final InputStream stream = HopperBot.class.getResourceAsStream(path);
         if (stream == null) {
             throw new HopperBotLoadingException("Failed to read resource "+path);

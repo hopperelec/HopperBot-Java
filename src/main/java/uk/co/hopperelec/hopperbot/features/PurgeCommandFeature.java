@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.*;
 
 import java.util.concurrent.ExecutionException;
@@ -15,14 +16,14 @@ import java.util.function.Consumer;
 
 
 public final class PurgeCommandFeature extends HopperBotCommandFeature {
-    public PurgeCommandFeature(JDABuilder builder) {
+    public PurgeCommandFeature(@NotNull JDABuilder builder) {
         super(builder,HopperBotFeatures.PURGING, "!",
             new HopperBotCommand("purge","Moderation command for deleting up to 500 messages in bulk",null,
                 new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete").setRequiredRange(1,500)},
                 CommandUsageFilter.HAS_MANAGE_MESSAGES
             ) {
                 @Override
-                public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                     if (event.getMember() != null) {
                         final String limitStr = content.replace(" ", "");
                         if (limitStr.equals("")) {
@@ -51,7 +52,7 @@ public final class PurgeCommandFeature extends HopperBotCommandFeature {
                 }
 
                 @Override
-                public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                     OptionMapping option = event.getOption("limit");
                     if (option != null) {
                         ((PurgeCommandFeature) feature).purgeMessages(event.getTextChannel(),option.getAsLong(), message -> event.reply(message).setEphemeral(true).queue());
@@ -61,7 +62,7 @@ public final class PurgeCommandFeature extends HopperBotCommandFeature {
         );
     }
 
-    public void purgeMessages(TextChannel channel, long limit, Consumer<String> reply) {
+    public void purgeMessages(@NotNull TextChannel channel, long limit, Consumer<String> reply) {
         channel.getIterableHistory().takeAsync((int) limit).thenAccept(messages -> {
                 channel.purgeMessages(messages).forEach(future -> {
                     try {

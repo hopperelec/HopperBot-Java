@@ -14,7 +14,7 @@ import java.sql.SQLException;
 public final class EconomyFeature extends HopperBotCommandFeature {
     private static final String dbLoginFileLocation = "economy_db.yml";
 
-    public EconomyFeature(JDABuilder builder) {
+    public EconomyFeature(@NotNull JDABuilder builder) {
         super(builder,HopperBotFeatures.ECONOMY, "$");
     }
 

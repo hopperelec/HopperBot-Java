@@ -7,9 +7,12 @@ import net.dv8tion.jda.api.entities.VoiceChannel;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.guild.voice.GuildVoiceUpdateEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import uk.co.hopperelec.hopperbot.HopperBotFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.CheckReturnValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +39,9 @@ public final class AutoVCGenFeature extends HopperBotFeature {
         }
     }
 
+    @Nullable
+    @CheckForNull
+    @CheckReturnValue
     private String[] getAutoVC(VoiceChannel channel, boolean size) {
         if (channel != null && channel.getMembers().size() == (size ? 1 : 0) && channelNames.containsKey(channel.getGuild())) {
             final Matcher matcher = pattern.matcher(channel.getName());

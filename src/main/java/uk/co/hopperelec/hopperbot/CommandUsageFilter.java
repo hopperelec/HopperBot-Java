@@ -3,6 +3,8 @@ package uk.co.hopperelec.hopperbot;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;
 
+import javax.annotation.CheckReturnValue;
+
 import static uk.co.hopperelec.hopperbot.HopperBotUtils.BOT_OWNER_ID;
 
 public enum CommandUsageFilter {
@@ -27,5 +29,6 @@ public enum CommandUsageFilter {
         }
     };
 
+    @CheckReturnValue
     public abstract boolean check(Member author, String content, HopperBotCommandFeature feature);
 }

@@ -6,23 +6,24 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.*;
 
 public final class LogCommandFeature extends HopperBotCommandFeature {
-    public LogCommandFeature(JDABuilder builder) {
+    public LogCommandFeature(@NotNull JDABuilder builder) {
         super(builder, HopperBotFeatures.LOG_COMMAND, "!",
                 new HopperBotCommand("log","Debugging command for logging a message",null,
                         new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log")},
                         CommandUsageFilter.IS_BOT_OWNER, CommandUsageFilter.NON_EMPTY_CONTENT
                 ) {
                     @Override
-                    public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                         utils.logGlobally(content,feature.featureEnum);
                         event.getMessage().addReaction("\uD83D\uDC4D").queue();
                     }
 
                     @Override
-                    public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
                         final OptionMapping optionMapping = event.getOption("content");
                         if (optionMapping != null) {
                             utils.logGlobally(optionMapping.getAsString(),feature.featureEnum);

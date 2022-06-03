@@ -2,7 +2,11 @@ package uk.co.hopperelec.hopperbot;
 
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.CheckReturnValue;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -11,10 +15,10 @@ import static java.util.Arrays.stream;
 
 public class HopperBotCommandFeature extends HopperBotFeature {
     public final String commandPrefix;
-    public final Set<HopperBotCommand> commands;
-    public final Set<Guild> guilds = new HashSet<>();
+    @NotNull public final Set<HopperBotCommand> commands;
+    @NotNull public final Set<Guild> guilds = new HashSet<>();
 
-    public HopperBotCommandFeature(JDABuilder builder, HopperBotFeatures featureEnum, String commandPrefix, HopperBotCommand... commands) {
+    public HopperBotCommandFeature(@NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, String commandPrefix, HopperBotCommand... commands) {
         super(builder,featureEnum);
         this.commandPrefix = commandPrefix;
         if (commands.length == 0) {
@@ -24,7 +28,10 @@ public class HopperBotCommandFeature extends HopperBotFeature {
         }
     }
 
-    public Set<HopperBotCommand> getExtraCommands(Guild guild, HopperBotServerConfig serverConfig) {
+    @Nullable
+    @CheckForNull
+    @CheckReturnValue
+    public Set<HopperBotCommand> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
         return null;
     }
 }

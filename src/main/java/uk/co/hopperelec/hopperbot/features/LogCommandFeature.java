@@ -11,7 +11,10 @@ import uk.co.hopperelec.hopperbot.*;
 public final class LogCommandFeature extends HopperBotCommandFeature {
     public LogCommandFeature(JDABuilder builder) {
         super(builder, HopperBotFeatures.LOG_COMMAND, "!",
-                new HopperBotCommand("log","Debugging command for logging a message",null, new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log")}) {
+                new HopperBotCommand("log","Debugging command for logging a message",null,
+                        new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log")},
+                        CommandUsageFilter.IS_BOT_OWNER, CommandUsageFilter.NON_EMPTY_CONTENT
+                ) {
                     @Override
                     public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                         utils.logGlobally(content,feature.featureEnum);

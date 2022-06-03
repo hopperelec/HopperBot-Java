@@ -39,7 +39,7 @@ public class HopperBotCommandHandler extends ListenerAdapter {
                             final String content = originalContent.replaceFirst("^"+quote(feature.commandPrefix+name), "");
                             if (!content.equals(originalContent)) {
                                 for (CommandUsageFilter filter : command.filters) {
-                                    if (filter.check(event.getMember(),content,feature)) {
+                                    if (!filter.check(event.getMember(),content,feature)) {
                                         getUtils().logToGuild(event.getAuthor().getId()+" tried to use text command "+feature.commandPrefix+name+" at message "+event.getMessageId()+" but failed usage filter "+filter.name(),feature.featureEnum,guild);
                                         event.getMessage().reply("You cannot use this command here!").queue(message -> message.delete().queueAfter(5L, TimeUnit.SECONDS));
                                         return;
@@ -62,7 +62,7 @@ public class HopperBotCommandHandler extends ListenerAdapter {
             for (HopperBotCommand command : feature.commands) {
                 if (command.name.equals(event.getName())) {
                     for (CommandUsageFilter filter : command.filters) {
-                        if (filter.check(event.getMember(),event.getOptions().get(0).toString(),feature)) {
+                        if (!filter.check(event.getMember(),event.getOptions().get(0).toString(),feature)) {
                             getUtils().logToGuild(event.getUser().getId()+" tried to use slash command "+command.name+" but failed usage filter "+filter.name(),feature.featureEnum,event.getGuild());
                             event.reply("You cannot use this command here!").queue();
                             return;

@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     private static final Logger logger = LoggerFactory.getLogger(HopperBotUtils.class);
     private static HopperBotUtils instance;
+    public static final long BOT_OWNER_ID = 348083986989449216L;
 
     public void logToGuild(String message, Guild guild) {
         final HopperBotServerConfig guildConfig = config.getServerConfig(guild.getIdLong());

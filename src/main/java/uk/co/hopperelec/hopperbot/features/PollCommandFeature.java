@@ -12,7 +12,10 @@ import uk.co.hopperelec.hopperbot.*;
 public final class PollCommandFeature extends HopperBotCommandFeature {
     public PollCommandFeature(JDABuilder builder) {
         super(builder, HopperBotFeatures.POLLS, "?",
-            new HopperBotCommand("poll","Generates a reaction poll",null, new OptionData[]{new OptionData(OptionType.STRING,"question","Question to be voted on")}) {
+            new HopperBotCommand("poll","Generates a reaction poll",null,
+                    new OptionData[]{new OptionData(OptionType.STRING,"question","Question to be voted on")},
+                    CommandUsageFilter.NON_EMPTY_CONTENT
+            ) {
                 @Override
                 public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
                     ((PollCommandFeature) feature).createPoll(event.getTextChannel(),content);

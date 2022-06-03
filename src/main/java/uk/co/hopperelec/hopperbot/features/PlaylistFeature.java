@@ -24,9 +24,13 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.*;
 
@@ -39,6 +43,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static uk.co.hopperelec.hopperbot.HopperBotUtils.BOT_OWNER_ID;
 
 public final class PlaylistFeature extends HopperBotButtonFeature implements AudioEventListener {
     private static final String SONGS_FILE_LOC = "Playlist/songs.yml";
@@ -52,6 +57,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     private final List<String> lastThreeSongs = new ArrayList<>(3);
     private final List<MessageEmbed> songlistPages = new ArrayList<>();
     private final Random random = new Random();
+    private final JaroWinklerSimilarity jaroWinklerSimilarity = new JaroWinklerSimilarity();
 
     private boolean anyoneListening = false;
     private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
@@ -88,10 +94,67 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         event.replyEmbeds(self.songlistPages.get(0)).addActionRow(self.getSonglistButtons(1)).queue();
                     }
+                }, new HopperBotCommand("play","Plays a specific song (only if bot owner or only person listening)",null,
+                        new OptionData[]{new OptionData(OptionType.STRING, "search", "Keyword to search song properties for")},
+                        CommandUsageFilter.NON_EMPTY_CONTENT
+                ) {
+                    @Override
+                    public void runTextCommand(MessageReceivedEvent event, String content, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                        event.getMessage().reply(((PlaylistFeature) feature).playSongCommand(event.getAuthor(),content)).queue();
+                    }
+
+                    @Override
+                    public void runSlashCommand(SlashCommandInteractionEvent event, HopperBotCommandFeature feature, HopperBotUtils utils) {
+                        final OptionMapping optionMapping = event.getOption("search");
+                        if (optionMapping != null) {
+                            event.reply(((PlaylistFeature) feature).playSongCommand(event.getUser(),optionMapping.getAsString())).queue();
+                        }
+                    }
                 }
         );
         playerManager.registerSourceManager(new LocalAudioSourceManager());
         newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
+    }
+
+    private boolean onlyPersonListening(User user) {
+        boolean selfFound = false;
+        for (Guild guild : guilds) {
+            final VoiceChannel voiceChannel = getVoiceChannelFor(guild);
+            if (selfFound) {
+                if (isAnyoneListeningIn(voiceChannel)) {
+                    return false;
+                }
+            } else if (voiceChannel != null) {
+                for (Member member : voiceChannel.getMembers()) {
+                    if (member.getUser() == user) {
+                        selfFound = true;
+                    } else if (!member.getUser().isBot()) {
+                        return false;
+                    }
+                }
+            }
+        }
+        return selfFound;
+    }
+
+    private Map.Entry<String,Double> searchSongs(String search) {
+        final Map<String,Double> results = new HashMap<>();
+        for (String songFilename : songFilenames) {
+            results.put(songFilename, jaroWinklerSimilarity.apply(search,songFilename));
+        }
+        return Collections.max(results.entrySet(), Comparator.comparingDouble(Map.Entry::getValue));
+    }
+
+    private String playSongCommand(User user, String search) {
+        if (user.getIdLong() == BOT_OWNER_ID || onlyPersonListening(user)) {
+            final Map.Entry<String,Double> searchResult = searchSongs(search);
+            if (searchResult.getValue() < 0.7) {
+                return "Could not find a close match. Try being more specific";
+            }
+            playSong(searchResult.getKey(),0);
+            return "Attempting to play closest match: "+searchResult.getKey();
+        }
+        return "You can only play a song if you're the only person listening to the playlist";
     }
 
     private Button songlistButton(String action, String emojiUnicode, boolean disabled) {
@@ -293,11 +356,17 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return guild.getVoiceChannelById(config.get("voice_channel").asLong());
     }
 
-    private boolean isAnyoneListening(VoiceChannel voiceChannel) {
+    private boolean isAnyoneListeningIn(VoiceChannel voiceChannel) {
         if (voiceChannel == null) {
             return false;
         }
         return voiceChannel.getMembers().stream().anyMatch(member -> !member.getUser().isBot());
+    }
+    private boolean isAnyoneListeningIn(Guild guild) {
+        return isAnyoneListeningIn(getVoiceChannelFor(guild));
+    }
+    private boolean findAnyoneListeningAtAll() {
+        return anyoneListening = guilds.stream().anyMatch(this::isAnyoneListeningIn);
     }
 
     @Override
@@ -308,27 +377,25 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         } else {
             event.getGuild().getAudioManager().openAudioConnection(voiceChannel);
             event.getGuild().getAudioManager().setSendingHandler(sendHandler);
-            anyoneListening = isAnyoneListening(voiceChannel);
+            if (!anyoneListening) {
+                anyoneListening = isAnyoneListeningIn(voiceChannel);
+            }
         }
     }
 
     @Override
     public void onGuildVoiceJoin(@NotNull GuildVoiceJoinEvent event) {
-        final boolean wasListening = anyoneListening;
-        anyoneListening = isAnyoneListening(getVoiceChannelFor(event.getGuild()));
-        if (!wasListening && anyoneListening) {
+        if (!anyoneListening && !event.getMember().getUser().isBot() && event.getChannelJoined() == getVoiceChannelFor(event.getGuild())) {
+            anyoneListening = true;
             playNextSong();
         }
     }
 
     @Override
     public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
-        if (getUtils().usesFeature(event.getGuild(),featureEnum)) {
-            anyoneListening = guilds.stream().anyMatch(guild -> isAnyoneListening(getVoiceChannelFor(guild)));
-            if (!anyoneListening) {
-                player.stopTrack();
-                unsetPresence();
-            }
+        if (getUtils().usesFeature(event.getGuild(),featureEnum) && !findAnyoneListeningAtAll()) {
+            player.stopTrack();
+            unsetPresence();
         }
     }
 }

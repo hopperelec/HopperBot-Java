@@ -18,6 +18,7 @@ public final class InfoCommandsFeature extends HopperBotCommandFeature {
     }
 
     @Override
+    @NotNull
     public Set<HopperBotCommand> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
         Set<HopperBotCommand> extraCommands = new HashSet<>();
         for (Map.Entry<String, JsonNode> commandConfig : serverConfig.getFeatureConfig(featureEnum).entrySet()) {

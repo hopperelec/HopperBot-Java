@@ -13,7 +13,7 @@ public final class LogCommandFeature extends HopperBotCommandFeature {
     public LogCommandFeature(@NotNull JDABuilder builder) {
         super(builder, HopperBotFeatures.LOG_COMMAND, "!",
                 new HopperBotCommand("log","Debugging command for logging a message",null,
-                        new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log")},
+                        new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log",true)},
                         CommandUsageFilter.IS_BOT_OWNER, CommandUsageFilter.NON_EMPTY_CONTENT
                 ) {
                     @Override

@@ -14,11 +14,11 @@ import java.util.stream.Collectors;
 import static java.util.Arrays.stream;
 
 public class HopperBotCommandFeature extends HopperBotFeature {
-    public final String commandPrefix;
+    @NotNull public final String commandPrefix;
     @NotNull public final Set<HopperBotCommand> commands;
     @NotNull public final Set<Guild> guilds = new HashSet<>();
 
-    public HopperBotCommandFeature(@NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, String commandPrefix, HopperBotCommand... commands) {
+    public HopperBotCommandFeature(@NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, @NotNull String commandPrefix, @NotNull HopperBotCommand @NotNull ... commands) {
         super(builder,featureEnum);
         this.commandPrefix = commandPrefix;
         if (commands.length == 0) {

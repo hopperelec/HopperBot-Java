@@ -85,14 +85,14 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
         return new EmbedBuilder().setFooter("Made by hopperelec#3060").setColor(0xe31313);
     }
 
-    public void tempReply(Message message, String reply) {
+    public void tempReply(@NotNull Message message, @NotNull String reply) {
         message.reply(reply).queue(replyMsg -> {
             replyMsg.delete().queueAfter(10, TimeUnit.SECONDS);
             message.delete().queueAfter(10, TimeUnit.SECONDS);
         });
     }
 
-    static synchronized void createInstance(JDA jda, HopperBotConfig config) {
+    static synchronized void createInstance(@NotNull JDA jda, @NotNull HopperBotConfig config) {
         if (instance == null) {
             instance = new HopperBotUtils(jda, config);
         } else {
@@ -102,7 +102,7 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
 
     @Nullable
     @CheckReturnValue
-    public <T> T getYAMLFile(@NotNull  HopperBotFeatures feature, @NotNull String fileLocation, @NotNull  Class<T> serializedClass) {
+    public <T> T getYAMLFile(@NotNull HopperBotFeatures feature, @NotNull String fileLocation, @NotNull  Class<T> serializedClass) {
         final File file = Paths.get(System.getProperty("user.dir"),fileLocation).toFile();
         try {
             if (file.createNewFile()) {

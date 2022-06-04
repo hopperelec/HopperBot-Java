@@ -14,7 +14,7 @@ public final class PollCommandFeature extends HopperBotCommandFeature {
     public PollCommandFeature(@NotNull JDABuilder builder) {
         super(builder, HopperBotFeatures.POLLS, "?",
             new HopperBotCommand("poll","Generates a reaction poll",null,
-                    new OptionData[]{new OptionData(OptionType.STRING,"question","Question to be voted on")},
+                    new OptionData[]{new OptionData(OptionType.STRING,"question","Question to be voted on",true)},
                     CommandUsageFilter.NON_EMPTY_CONTENT
             ) {
                 @Override

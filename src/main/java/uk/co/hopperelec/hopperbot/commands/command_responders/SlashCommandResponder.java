@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class SlashCommandResponder implements CommandResponder {
-    private @NotNull final SlashCommandInteractionEvent event;
+    @NotNull private final SlashCommandInteractionEvent event;
     private final boolean ephemeral;
 
     public SlashCommandResponder(@NotNull SlashCommandInteractionEvent event, boolean ephemeral) {

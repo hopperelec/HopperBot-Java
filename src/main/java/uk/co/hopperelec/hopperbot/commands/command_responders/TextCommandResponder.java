@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class TextCommandResponder implements CommandResponder {
-    private @NotNull final Message eventMessage;
+    @NotNull private final Message eventMessage;
 
     public TextCommandResponder(@NotNull Message eventMessage) {
         this.eventMessage = eventMessage;

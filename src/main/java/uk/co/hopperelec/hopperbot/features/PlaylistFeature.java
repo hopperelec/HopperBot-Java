@@ -33,7 +33,6 @@ import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
-import uk.co.hopperelec.hopperbot.HopperBotUtils;
 import uk.co.hopperelec.hopperbot.commands.CommandUsageFilter;
 import uk.co.hopperelec.hopperbot.commands.HopperBotButtonFeature;
 import uk.co.hopperelec.hopperbot.commands.HopperBotCommand;
@@ -156,13 +155,13 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         super("playlist", builder, HopperBotFeatures.PLAYLIST, "~",
                 new HopperBotCommand("songlist", "Shows list of songs currently in the playlist", new String[]{"playlist"}, null) {
                     @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         event.getMessage().replyEmbeds(self.songlistPages.get(0)).setActionRow(self.getPageButtons("songlist",1,self.songlistPages)).queue();
                     }
 
                     @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         event.replyEmbeds(self.songlistPages.get(0)).addActionRow(self.getPageButtons("songlist",1,self.songlistPages)).queue();
                     }
@@ -171,12 +170,12 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                         CommandUsageFilter.NON_EMPTY_CONTENT
                 ) {
                     @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
                         ((PlaylistFeature) feature).playSongCommand(new TextCommandResponder(event.getMessage()),event.getAuthor(),content);
                     }
 
                     @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
                         final OptionMapping optionMapping = event.getOption("search");
                         if (optionMapping != null) {
                             ((PlaylistFeature) feature).playSongCommand(new SlashCommandResponder(event,false),event.getUser(),optionMapping.getAsString());
@@ -186,7 +185,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                         new OptionData[]{new OptionData(OptionType.STRING, "search", "Keyword to search song properties for")}
                 ) {
                     @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         if (content.equals("")) {
                             self.lyricsCommand(new TextCommandResponder(event.getMessage()));
@@ -196,7 +195,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                     }
 
                     @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
                         final PlaylistFeature self = ((PlaylistFeature) feature);
                         final OptionMapping optionMapping = event.getOption("search");
                         if (optionMapping == null) {

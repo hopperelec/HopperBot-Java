@@ -20,16 +20,16 @@ public final class LogCommandFeature extends HopperBotCommandFeature {
                         CommandUsageFilter.IS_BOT_OWNER, CommandUsageFilter.NON_EMPTY_CONTENT
                 ) {
                     @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
-                        utils.logGlobally(content,feature.featureEnum);
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
+                        feature.getUtils().logGlobally(content,feature.featureEnum);
                         event.getMessage().addReaction("\uD83D\uDC4D").queue();
                     }
 
                     @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
                         final OptionMapping optionMapping = event.getOption("content");
                         if (optionMapping != null) {
-                            utils.logGlobally(optionMapping.getAsString(),feature.featureEnum);
+                            feature.getUtils().logGlobally(optionMapping.getAsString(),feature.featureEnum);
                             event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
                         }
                     }

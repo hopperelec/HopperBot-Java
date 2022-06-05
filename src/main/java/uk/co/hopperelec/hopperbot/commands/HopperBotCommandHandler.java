@@ -44,7 +44,7 @@ public class HopperBotCommandHandler extends HopperBotListener {
                                     }
                                 }
                                 getUtils().logToGuild(event.getAuthor().getId()+" successfully used text command "+feature.commandPrefix+name+" at message "+event.getMessageId(),feature.featureEnum,guild);
-                                command.runTextCommand(event,content,feature,getUtils());
+                                command.runTextCommand(event,content,feature);
                                 return;
                             }
                         }
@@ -67,7 +67,7 @@ public class HopperBotCommandHandler extends HopperBotListener {
                         }
                     }
                     getUtils().logToGuild(event.getUser().getId()+" successfully used slash command /"+command.name,feature.featureEnum,event.getGuild());
-                    command.runSlashCommand(event,feature,getUtils());
+                    command.runSlashCommand(event,feature);
                     return;
                 }
             }

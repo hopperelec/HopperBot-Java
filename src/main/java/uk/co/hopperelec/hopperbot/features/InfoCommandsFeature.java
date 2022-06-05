@@ -27,14 +27,14 @@ public final class InfoCommandsFeature extends HopperBotCommandFeature {
             final String desc = commandConfig.getValue().asText();
             final HopperBotCommand command = new HopperBotCommand(commandConfig.getKey(),desc,null,null) {
                 @Override
-                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
                     if (event.getGuild() == guild) {
                         event.getMessage().reply(desc).queue();
                     }
                 }
 
                 @Override
-                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
                     event.reply(desc).queue();
                 }
             };

@@ -7,15 +7,15 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
-public final class ServersCommandFeature extends HopperBotCommandFeature {
+public final class ServersCommandFeature extends HopperBotFeature {
     private MessageEmbed embed;
 
     public ServersCommandFeature(@NotNull JDABuilder builder) {
-        super(builder,HopperBotFeatures.SERVER_LIST,"?");
+        super(builder,HopperBotFeatures.SERVER_LIST);
     }
 
     @Override

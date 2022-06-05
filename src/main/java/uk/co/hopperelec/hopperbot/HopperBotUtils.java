@@ -6,7 +6,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.TextChannel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -18,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     private static final Logger logger = LoggerFactory.getLogger(HopperBotUtils.class);
@@ -83,13 +81,6 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     @CheckReturnValue
     public EmbedBuilder getEmbedBase() {
         return new EmbedBuilder().setFooter("Made by hopperelec#3060").setColor(0xe31313);
-    }
-
-    public void tempReply(@NotNull Message message, @NotNull String reply) {
-        message.reply(reply).queue(replyMsg -> {
-            replyMsg.delete().queueAfter(10, TimeUnit.SECONDS);
-            message.delete().queueAfter(10, TimeUnit.SECONDS);
-        });
     }
 
     static synchronized void createInstance(@NotNull JDA jda, @NotNull HopperBotConfig config) {

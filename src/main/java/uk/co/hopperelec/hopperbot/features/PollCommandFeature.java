@@ -21,15 +21,15 @@ public final class PollCommandFeature extends HopperBotCommandFeature {
                     CommandUsageFilter.NON_EMPTY_CONTENT
             ) {
                 @Override
-                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
-                    ((PollCommandFeature) feature).createPoll(event.getTextChannel(),content);
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
+                    PollCommandFeature.createPoll(event.getTextChannel(),content);
                 }
 
                 @Override
-                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature, @NotNull HopperBotUtils utils) {
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
                     final OptionMapping option = event.getOption("question");
                     if (option != null) {
-                        ((PollCommandFeature) feature).createPoll(event.getTextChannel(),option.getAsString());
+                        PollCommandFeature.createPoll(event.getTextChannel(),option.getAsString());
                         event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
                     }
                 }
@@ -37,7 +37,7 @@ public final class PollCommandFeature extends HopperBotCommandFeature {
         );
     }
 
-    public void createPoll(@NotNull TextChannel channel, @NotNull String question) {
+    public static void createPoll(@NotNull TextChannel channel, @NotNull String question) {
         channel.sendMessage(question).queue(message -> {
             message.addReaction("\uD83D\uDC4D").queue();
             message.addReaction("\uD83D\uDC4E").queue();

@@ -9,6 +9,9 @@ import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.*;
+import uk.co.hopperelec.hopperbot.commands.CommandUsageFilter;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommand;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
 
 public final class PollCommandFeature extends HopperBotCommandFeature {
     public PollCommandFeature(@NotNull JDABuilder builder) {

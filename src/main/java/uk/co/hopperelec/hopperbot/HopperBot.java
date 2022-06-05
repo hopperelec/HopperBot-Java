@@ -9,6 +9,8 @@ import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandHandler;
 
 import javax.annotation.CheckReturnValue;
 import javax.security.auth.login.LoginException;

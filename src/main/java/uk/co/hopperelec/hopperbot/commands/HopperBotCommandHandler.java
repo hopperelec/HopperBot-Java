@@ -1,4 +1,4 @@
-package uk.co.hopperelec.hopperbot;
+package uk.co.hopperelec.hopperbot.commands;
 
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
@@ -6,25 +6,23 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
-import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
+import uk.co.hopperelec.hopperbot.HopperBotListener;
+import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.regex.Pattern.quote;
 
-public class HopperBotCommandHandler extends ListenerAdapter {
+public class HopperBotCommandHandler extends HopperBotListener {
     @NotNull private final HopperBotCommandFeature[] features;
 
     public HopperBotCommandHandler(@NotNull Set<HopperBotCommandFeature> features) {
         this.features = features.toArray(new HopperBotCommandFeature[0]);
-    }
-
-    private HopperBotUtils getUtils() {
-        return HopperBotUtils.getInstance();
     }
 
     @Override

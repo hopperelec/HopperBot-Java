@@ -1,4 +1,4 @@
-package uk.co.hopperelec.hopperbot;
+package uk.co.hopperelec.hopperbot.commands;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.Member;

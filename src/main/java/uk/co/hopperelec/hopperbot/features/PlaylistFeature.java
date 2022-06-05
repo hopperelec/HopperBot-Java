@@ -32,8 +32,15 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
-import uk.co.hopperelec.hopperbot.*;
-import uk.co.hopperelec.hopperbot.command_responders.*;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.HopperBotUtils;
+import uk.co.hopperelec.hopperbot.commands.CommandUsageFilter;
+import uk.co.hopperelec.hopperbot.commands.HopperBotButtonFeature;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommand;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.commands.command_responders.CommandResponder;
+import uk.co.hopperelec.hopperbot.commands.command_responders.SlashCommandResponder;
+import uk.co.hopperelec.hopperbot.commands.command_responders.TextCommandResponder;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckReturnValue;

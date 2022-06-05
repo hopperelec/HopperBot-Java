@@ -4,7 +4,7 @@ import com.mysql.cj.jdbc.MysqlDataSource;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.events.ReadyEvent;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.SimpleMySQLLoginDetails;
 

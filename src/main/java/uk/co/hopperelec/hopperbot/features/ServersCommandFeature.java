@@ -7,7 +7,7 @@ import net.dv8tion.jda.api.events.ReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.hopperbot.HopperBotCommandFeature;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 

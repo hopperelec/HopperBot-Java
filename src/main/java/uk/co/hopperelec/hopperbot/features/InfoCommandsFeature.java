@@ -7,6 +7,8 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.*;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommand;
+import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
 
 import java.util.HashSet;
 import java.util.Map;

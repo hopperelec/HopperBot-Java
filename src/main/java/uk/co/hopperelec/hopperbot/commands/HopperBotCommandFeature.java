@@ -1,9 +1,12 @@
-package uk.co.hopperelec.hopperbot;
+package uk.co.hopperelec.hopperbot.commands;
 
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Guild;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import uk.co.hopperelec.hopperbot.HopperBotFeature;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
+import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckReturnValue;

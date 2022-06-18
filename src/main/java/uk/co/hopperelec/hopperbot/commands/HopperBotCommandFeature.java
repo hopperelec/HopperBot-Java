@@ -12,29 +12,25 @@ import javax.annotation.CheckForNull;
 import javax.annotation.CheckReturnValue;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import static java.util.Arrays.stream;
 
 public class HopperBotCommandFeature extends HopperBotFeature {
     @NotNull public final String commandPrefix;
-    @NotNull public final Set<HopperBotCommand> commands;
+    @NotNull public final Set<HopperBotCommand<?>> commands = new HashSet<>();
     @NotNull public final Set<Guild> guilds = new HashSet<>();
 
-    public HopperBotCommandFeature(@NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, @NotNull String commandPrefix, @NotNull HopperBotCommand @NotNull ... commands) {
+    public HopperBotCommandFeature(@NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, @NotNull String commandPrefix) {
         super(builder,featureEnum);
         this.commandPrefix = commandPrefix;
-        if (commands.length == 0) {
-            this.commands = new HashSet<>();
-        } else {
-            this.commands = stream(commands).collect(Collectors.toSet());
-        }
+    }
+
+    protected void addCommands(@NotNull HopperBotCommand<?> @NotNull ... command) {
+        commands.addAll(Set.of(command));
     }
 
     @Nullable
     @CheckForNull
     @CheckReturnValue
-    public Set<HopperBotCommand> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
+    public Set<HopperBotCommand<?>> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
         return null;
     }
 }

@@ -18,7 +18,14 @@ public class TextCommandResponder implements CommandResponder {
     public void respond(@NotNull String message) {
         eventMessage.reply(message).queue();
     }
-
+    @Override
+    public void respond(@NotNull MessageEmbed embed) {
+        eventMessage.replyEmbeds(embed).queue();
+    }
+    @Override
+    public void respond(@NotNull String message, @NotNull List<Button> buttons) {
+        eventMessage.reply(message).setActionRow(buttons).queue();
+    }
     @Override
     public void respond(@NotNull MessageEmbed embed, @NotNull List<Button> buttons) {
         eventMessage.replyEmbeds(embed).setActionRow(buttons).queue();

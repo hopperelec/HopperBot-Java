@@ -13,14 +13,16 @@ import java.util.Set;
 
 import static java.util.Arrays.asList;
 
-public abstract class HopperBotCommand {
+public abstract class HopperBotCommand<F extends HopperBotCommandFeature> {
     @NotNull public final String name;
     @NotNull public final String description;
     @NotNull public final Set<String> aliases = new HashSet<>();
     public final CommandUsageFilter[] filters;
     @NotNull public final SlashCommandData slashCommand;
+    @NotNull public final F feature;
 
-    public HopperBotCommand(@NotNull String name, @NotNull String description, @Nullable String[] aliases, @Nullable OptionData[] options, CommandUsageFilter... filters) {
+    public HopperBotCommand(@NotNull F feature, @NotNull String name, @NotNull String description, @Nullable String[] aliases, @Nullable OptionData[] options, CommandUsageFilter... filters) {
+        this.feature = feature;
         this.name = name;
         this.description = description;
         this.aliases.add(name);
@@ -35,6 +37,6 @@ public abstract class HopperBotCommand {
         }
     }
 
-    public abstract void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature);
-    public abstract void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature);
+    public abstract void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content);
+    public abstract void runSlashCommand(@NotNull SlashCommandInteractionEvent event);
 }

@@ -23,13 +23,14 @@ import static uk.co.hopperelec.hopperbot.commands.command_responders.TempCommand
 
 public final class PurgeCommandFeature extends HopperBotCommandFeature {
     public PurgeCommandFeature(@NotNull JDABuilder builder) {
-        super(builder, HopperBotFeatures.PURGING, "!",
-            new HopperBotCommand("purge","Moderation command for deleting up to 500 messages in bulk",null,
-                new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete",true).setRequiredRange(1,500)},
-                CommandUsageFilter.HAS_MANAGE_MESSAGES
+        super(builder, HopperBotFeatures.PURGING, "!");
+        addCommands(
+            new HopperBotCommand<>(this, "purge", "Moderation command for deleting up to 500 messages in bulk", null,
+                    new OptionData[]{new OptionData(OptionType.INTEGER,"limit","Number of messages to delete",true).setRequiredRange(1,500)},
+                    CommandUsageFilter.HAS_MANAGE_MESSAGES
             ) {
                 @Override
-                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
                     if (event.getMember() != null) {
                         final String limitStr = content.replace(" ", "");
                         if (limitStr.equals("")) {
@@ -47,17 +48,17 @@ public final class PurgeCommandFeature extends HopperBotCommandFeature {
                             } else if (limit > 500) {
                                 tempReply(event.getMessage(),"Cannot purge more than 500 messages!");
                             } else {
-                                PurgeCommandFeature.purgeMessages(feature, new TempCommandResponder(event.getMessage()),event.getTextChannel(),limit);
+                                purgeMessages(feature, new TempCommandResponder(event.getMessage()),event.getTextChannel(),limit);
                             }
                         }
                     }
                 }
 
                 @Override
-                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
                     OptionMapping option = event.getOption("limit");
                     if (option != null) {
-                        PurgeCommandFeature.purgeMessages(feature, new SlashCommandResponder(event,true),event.getTextChannel(),option.getAsLong());
+                        purgeMessages(feature, new SlashCommandResponder(event,true),event.getTextChannel(),option.getAsLong());
                     }
                 }
             }

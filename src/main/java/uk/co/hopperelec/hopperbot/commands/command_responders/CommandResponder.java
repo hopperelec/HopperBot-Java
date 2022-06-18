@@ -8,5 +8,7 @@ import java.util.List;
 
 public interface CommandResponder {
     void respond(@NotNull String message);
+    void respond(@NotNull MessageEmbed embed);
+    void respond(@NotNull String message, @NotNull List<Button> buttons);
     void respond(@NotNull MessageEmbed embed, @NotNull List<Button> buttons);
 }

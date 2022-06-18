@@ -21,20 +21,20 @@ public final class InfoCommandsFeature extends HopperBotCommandFeature {
 
     @Override
     @NotNull
-    public Set<HopperBotCommand> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
-        Set<HopperBotCommand> extraCommands = new HashSet<>();
+    public Set<HopperBotCommand<?>> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
+        Set<HopperBotCommand<?>> extraCommands = new HashSet<>();
         for (Map.Entry<String, JsonNode> commandConfig : serverConfig.getFeatureConfig(featureEnum).entrySet()) {
             final String desc = commandConfig.getValue().asText();
-            final HopperBotCommand command = new HopperBotCommand(commandConfig.getKey(),desc,null,null) {
+            final HopperBotCommand<?> command = new HopperBotCommand<>(this, commandConfig.getKey(), desc, null, null) {
                 @Override
-                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
                     if (event.getGuild() == guild) {
                         event.getMessage().reply(desc).queue();
                     }
                 }
 
                 @Override
-                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
                     event.reply(desc).queue();
                 }
             };

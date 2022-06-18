@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.TextChannel;
+import net.dv8tion.jda.api.entities.User;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -22,6 +23,8 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     private static final Logger logger = LoggerFactory.getLogger(HopperBotUtils.class);
     private static HopperBotUtils instance;
     public static final long BOT_OWNER_ID = 348083986989449216L;
+    @NotNull public static final String BOT_OWNER_DEFAULT_NAME = "hopperelec#3060";
+    @NotNull public static final String BOT_OWNER_DEFAULT_ICON = "https://www.hopperelec.co.uk/resources/hopper.png?scale=0.2&padding=30&padding-side=-8&type3D=2&shadow=32&fill=100&outline-width=6&bg=1";
 
     public void logToGuild(@NotNull String message, @NotNull Guild guild) {
         final HopperBotServerConfig guildConfig = config.getServerConfig(guild.getIdLong());
@@ -80,7 +83,14 @@ public record HopperBotUtils(JDA jda, HopperBotConfig config) {
     @NotNull
     @CheckReturnValue
     public EmbedBuilder getEmbedBase() {
-        return new EmbedBuilder().setFooter("Made by hopperelec#3060").setColor(0xe31313);
+        final User botOwnerUser = jda.getUserById(BOT_OWNER_ID);
+        final EmbedBuilder embedBuilder = new EmbedBuilder();
+        if (botOwnerUser == null) {
+            embedBuilder.setFooter("Made by "+BOT_OWNER_DEFAULT_NAME,BOT_OWNER_DEFAULT_ICON);
+        } else {
+            embedBuilder.setFooter("Made by "+botOwnerUser.getName()+"#"+botOwnerUser.getDiscriminator(),botOwnerUser.getAvatarUrl());
+        }
+        return embedBuilder.setColor(0xe31313);
     }
 
     static synchronized void createInstance(@NotNull JDA jda, @NotNull HopperBotConfig config) {

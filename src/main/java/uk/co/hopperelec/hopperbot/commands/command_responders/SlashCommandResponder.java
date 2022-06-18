@@ -20,9 +20,17 @@ public class SlashCommandResponder implements CommandResponder {
     public void respond(@NotNull String message) {
         event.reply(message).setEphemeral(ephemeral).queue();
     }
-
+    @Override
+    public void respond(@NotNull MessageEmbed embed) {
+        event.replyEmbeds(embed).setEphemeral(ephemeral).queue();
+    }
+    @Override
+    public void respond(@NotNull String message, @NotNull List<Button> buttons) {
+        event.reply(message).addActionRow(buttons).setEphemeral(ephemeral).queue();
+    }
     @Override
     public void respond(@NotNull MessageEmbed embed, @NotNull List<Button> buttons) {
         event.replyEmbeds(embed).addActionRow(buttons).setEphemeral(ephemeral).queue();
     }
+
 }

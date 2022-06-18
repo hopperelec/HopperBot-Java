@@ -32,7 +32,7 @@ public class HopperBotCommandHandler extends HopperBotListener {
             final String originalContent = event.getMessage().getContentRaw();
             for (HopperBotCommandFeature feature : features) {
                 if (getUtils().usesFeature(guild,feature.featureEnum) && originalContent.startsWith(feature.commandPrefix)) {
-                    for (HopperBotCommand command : feature.commands) {
+                    for (HopperBotCommand<?> command : feature.commands) {
                         for (String name : command.aliases) {
                             final String content = originalContent.replaceFirst("^"+quote(feature.commandPrefix+name), "");
                             if (!content.equals(originalContent)) {
@@ -44,7 +44,7 @@ public class HopperBotCommandHandler extends HopperBotListener {
                                     }
                                 }
                                 getUtils().logToGuild(event.getAuthor().getId()+" successfully used text command "+feature.commandPrefix+name+" at message "+event.getMessageId(),feature.featureEnum,guild);
-                                command.runTextCommand(event,content,feature);
+                                command.runTextCommand(event,content);
                                 return;
                             }
                         }
@@ -57,7 +57,7 @@ public class HopperBotCommandHandler extends HopperBotListener {
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         for (HopperBotCommandFeature feature : features) {
-            for (HopperBotCommand command : feature.commands) {
+            for (HopperBotCommand<?> command : feature.commands) {
                 if (command.name.equals(event.getName())) {
                     for (CommandUsageFilter filter : command.filters) {
                         if (!filter.check(event.getMember(),event.getOptions().get(0).toString(),feature)) {
@@ -67,7 +67,7 @@ public class HopperBotCommandHandler extends HopperBotListener {
                         }
                     }
                     getUtils().logToGuild(event.getUser().getId()+" successfully used slash command /"+command.name,feature.featureEnum,event.getGuild());
-                    command.runSlashCommand(event,feature);
+                    command.runSlashCommand(event);
                     return;
                 }
             }
@@ -94,12 +94,12 @@ public class HopperBotCommandHandler extends HopperBotListener {
             for (HopperBotCommandFeature feature : features) {
                 if (serverConfig.usesFeature(feature.featureEnum)) {
                     feature.guilds.add(event.getGuild());
-                    for (HopperBotCommand command : feature.commands) {
+                    for (HopperBotCommand<?> command : feature.commands) {
                         commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
                     }
-                    Set<HopperBotCommand> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
+                    Set<HopperBotCommand<?>> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
                     if (extraCommands != null) {
-                        for (HopperBotCommand command : extraCommands) {
+                        for (HopperBotCommand<?> command : extraCommands) {
                             commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
                         }
                     }

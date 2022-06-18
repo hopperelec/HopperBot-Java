@@ -7,33 +7,34 @@ import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.jetbrains.annotations.NotNull;
-import uk.co.hopperelec.hopperbot.*;
+import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.commands.CommandUsageFilter;
 import uk.co.hopperelec.hopperbot.commands.HopperBotCommand;
 import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
 
 public final class LogCommandFeature extends HopperBotCommandFeature {
     public LogCommandFeature(@NotNull JDABuilder builder) {
-        super(builder, HopperBotFeatures.LOG_COMMAND, "!",
-                new HopperBotCommand("log","Debugging command for logging a message",null,
-                        new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log",true)},
-                        CommandUsageFilter.IS_BOT_OWNER, CommandUsageFilter.NON_EMPTY_CONTENT
-                ) {
-                    @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
-                        feature.getUtils().logGlobally(content,feature.featureEnum);
-                        event.getMessage().addReaction("\uD83D\uDC4D").queue();
-                    }
+        super(builder, HopperBotFeatures.LOG_COMMAND, "!");
+        addCommands(
+            new HopperBotCommand<>(this, "log", "Debugging command for logging a message", null,
+                    new OptionData[]{new OptionData(OptionType.STRING, "content", "The text to log",true)},
+                    CommandUsageFilter.IS_BOT_OWNER, CommandUsageFilter.NON_EMPTY_CONTENT
+            ) {
+                @Override
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
+                    feature.getUtils().logGlobally(content,feature.featureEnum);
+                    event.getMessage().addReaction("\uD83D\uDC4D").queue();
+                }
 
-                    @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
-                        final OptionMapping optionMapping = event.getOption("content");
-                        if (optionMapping != null) {
-                            feature.getUtils().logGlobally(optionMapping.getAsString(),feature.featureEnum);
-                            event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
-                        }
+                @Override
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+                    final OptionMapping optionMapping = event.getOption("content");
+                    if (optionMapping != null) {
+                        feature.getUtils().logGlobally(optionMapping.getAsString(),feature.featureEnum);
+                        event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
                     }
                 }
+            }
         );
     }
 }

@@ -36,7 +36,6 @@ import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 import uk.co.hopperelec.hopperbot.commands.CommandUsageFilter;
 import uk.co.hopperelec.hopperbot.commands.HopperBotButtonFeature;
 import uk.co.hopperelec.hopperbot.commands.HopperBotCommand;
-import uk.co.hopperelec.hopperbot.commands.HopperBotCommandFeature;
 import uk.co.hopperelec.hopperbot.commands.command_responders.CommandResponder;
 import uk.co.hopperelec.hopperbot.commands.command_responders.SlashCommandResponder;
 import uk.co.hopperelec.hopperbot.commands.command_responders.TextCommandResponder;
@@ -51,6 +50,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
@@ -60,6 +60,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     @NotNull private static final String SONGS_FILE_LOC = "Playlist/songs.yml";
     @NotNull private static final String SONGS_DIR_LOC = "Playlist/";
     @NotNull private static final String ABSOLUTE_SONGS_DIR_LOC = FileSystems.getDefault().getPath(SONGS_DIR_LOC).toAbsolutePath().toString();
+    @NotNull private static final OptionData searchOption = new OptionData(OptionType.STRING, "search", "Keyword to search song properties for");
     private static final int SONGLIST_MAX_LINES = 31;
     private static final int MAX_NEXT_SONG_ATTEMPTS = 5;
     private static final double MIN_SEARCH_CONFIDENCE = 0.7;
@@ -101,6 +102,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         @Nullable final String note;
         @Nullable final String lyrics;
         @Nullable final List<MessageEmbed> lyricEmbeds;
+        @NotNull final MessageEmbed songInfoEmbed;
 
         HopperBotPlaylistSong(@NotNull String filename, @NotNull Map<String,JsonNode> songJsonData, @NotNull PlaylistFeature playlistFeature) {
             this.filename = filename;
@@ -143,68 +145,133 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                 lyrics = null;
                 lyricEmbeds = null;
             }
+
+            songInfoEmbed = addBooleanField(
+                addNullableField(
+                        addListField(
+                            addListField(
+                                playlistFeature.getUtils().getEmbedBase()
+                                    .setTitle("Song info")
+                                    .setAuthor(strippedFilename() + " (Click for YouTube video)",fullURL())
+                                    .setImage(thumbnail())
+                                    .addField("Title",title,false),
+                                "Author", authors, true
+                        ), "Singer", singers, true
+                    ), "Note", note, false
+                ), "Lyrics available (/lyrics [song])", lyrics != null, false
+            ).build();
         }
 
         @NotNull
-        String strippedFilename() {
+        public String strippedFilename() {
             return removeExtension(filename);
+        }
+
+        @NotNull
+        public String thumbnail() {
+            return "https://i.ytimg.com/vi/"+url+"/hqdefault.jpg";
+        }
+
+        @NotNull
+        public String fullURL() {
+            return "https://www.youtube.com/watch?v="+url;
+        }
+
+        @NotNull
+        private EmbedBuilder addListField(@NotNull EmbedBuilder embedBuilder, @NotNull String name, @NotNull List<String> values, boolean inline) {
+            if (values.isEmpty()) {
+                return embedBuilder;
+            }
+            if (values.size() == 1) {
+                return embedBuilder.addField(name,values.get(0),true);
+            }
+            return embedBuilder.addField(name+"s",String.join(", ",values),inline);
+        }
+        @NotNull
+        private EmbedBuilder addNullableField(@NotNull EmbedBuilder embedBuilder, @NotNull String name, @Nullable String value, boolean inline) {
+            if (value == null || value.equals("")) {
+                return embedBuilder;
+            }
+            return embedBuilder.addField(name,value,inline);
+        }
+        @NotNull
+        private EmbedBuilder addBooleanField(@NotNull EmbedBuilder embedBuilder, @NotNull String name, boolean value, boolean inline) {
+            return embedBuilder.addField(name+"?",value ? "Yes" : "No",inline);
         }
     }
 
     public PlaylistFeature(@NotNull JDABuilder builder) {
-        super("playlist", builder, HopperBotFeatures.PLAYLIST, "~",
-                new HopperBotCommand("songlist", "Shows list of songs currently in the playlist", new String[]{"playlist"}, null) {
+        super("playlist", builder, HopperBotFeatures.PLAYLIST, "~");
+        addCommands(
+                new HopperBotCommand<>(this, "songlist", "Shows list of songs currently in the playlist", new String[]{"playlist"}, null) {
                     @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
-                        final PlaylistFeature self = ((PlaylistFeature) feature);
-                        event.getMessage().replyEmbeds(self.songlistPages.get(0)).setActionRow(self.getPageButtons("songlist",1,self.songlistPages)).queue();
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
+                        event.getMessage().replyEmbeds(feature.songlistPages.get(0)).setActionRow(feature.getPageButtons("songlist", 1, feature.songlistPages)).queue();
                     }
 
                     @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
-                        final PlaylistFeature self = ((PlaylistFeature) feature);
-                        event.replyEmbeds(self.songlistPages.get(0)).addActionRow(self.getPageButtons("songlist",1,self.songlistPages)).queue();
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+                        event.replyEmbeds(feature.songlistPages.get(0)).addActionRow(feature.getPageButtons("songlist", 1, feature.songlistPages)).queue();
                     }
-                }, new HopperBotCommand("play", "Plays a specific song (only if bot owner or only person listening)", null,
-                        new OptionData[]{new OptionData(OptionType.STRING, "search", "Keyword to search song properties for",true)},
-                        CommandUsageFilter.NON_EMPTY_CONTENT
-                ) {
-                    @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
-                        ((PlaylistFeature) feature).playSongCommand(new TextCommandResponder(event.getMessage()),event.getAuthor(),content);
-                    }
+                }, new HopperBotCommand<>(this, "play", "Plays a specific song (only if bot owner or only person listening)", null,
+                    new OptionData[]{searchOption.setRequired(true)},
+                    CommandUsageFilter.NON_EMPTY_CONTENT
+            ) {
+                @Override
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
+                    feature.playSongCommand(new TextCommandResponder(event.getMessage()), event.getAuthor(), content);
+                }
 
-                    @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
-                        final OptionMapping optionMapping = event.getOption("search");
-                        if (optionMapping != null) {
-                            ((PlaylistFeature) feature).playSongCommand(new SlashCommandResponder(event,false),event.getUser(),optionMapping.getAsString());
-                        }
-                    }
-                }, new HopperBotCommand("lyrics", "Displays the lyrics to the currently playing or a specified song",null,
-                        new OptionData[]{new OptionData(OptionType.STRING, "search", "Keyword to search song properties for")}
-                ) {
-                    @Override
-                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content, @NotNull HopperBotCommandFeature feature) {
-                        final PlaylistFeature self = ((PlaylistFeature) feature);
-                        if (content.equals("")) {
-                            self.lyricsCommand(new TextCommandResponder(event.getMessage()));
-                        } else {
-                            self.lyricsCommand(new TextCommandResponder(event.getMessage()),content);
-                        }
-                    }
-
-                    @Override
-                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event, @NotNull HopperBotCommandFeature feature) {
-                        final PlaylistFeature self = ((PlaylistFeature) feature);
-                        final OptionMapping optionMapping = event.getOption("search");
-                        if (optionMapping == null) {
-                            self.lyricsCommand(new SlashCommandResponder(event,false));
-                        } else {
-                            self.lyricsCommand(new SlashCommandResponder(event,false),optionMapping.getAsString());
-                        }
+                @Override
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+                    final OptionMapping optionMapping = event.getOption("search");
+                    if (optionMapping != null) {
+                        feature.playSongCommand(new SlashCommandResponder(event, false), event.getUser(), optionMapping.getAsString());
                     }
                 }
+            }, new HopperBotCommand<>(this, "lyrics", "Displays the lyrics to the currently playing or a specified song", null,
+                    new OptionData[]{searchOption.setRequired(false)}
+            ) {
+                @Override
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
+                    if (content.equals("")) {
+                        feature.lyricsCommand(new TextCommandResponder(event.getMessage()));
+                    } else {
+                        feature.lyricsCommand(new TextCommandResponder(event.getMessage()), content);
+                    }
+                }
+
+                @Override
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+                    final OptionMapping optionMapping = event.getOption("search");
+                    if (optionMapping == null) {
+                        feature.lyricsCommand(new SlashCommandResponder(event, false));
+                    } else {
+                        feature.lyricsCommand(new SlashCommandResponder(event, false), optionMapping.getAsString());
+                    }
+                }
+            }, new HopperBotCommand<>(this, "songinfo", "Shows lots of information about the currently playing or specified song", null,
+                    new OptionData[]{searchOption.setRequired(false)}
+            ) {
+                @Override
+                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
+                    if (content.equals("")) {
+                        feature.songInfoCommand(new TextCommandResponder(event.getMessage()));
+                    } else {
+                        feature.songInfoCommand(new TextCommandResponder(event.getMessage()), content);
+                    }
+                }
+
+                @Override
+                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+                    final OptionMapping optionMapping = event.getOption("search");
+                    if (optionMapping == null) {
+                        feature.songInfoCommand(new SlashCommandResponder(event, false));
+                    } else {
+                        feature.songInfoCommand(new SlashCommandResponder(event, false), optionMapping.getAsString());
+                    }
+                }
+            }
         );
         playerManager.registerSourceManager(new LocalAudioSourceManager());
         newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
@@ -242,33 +309,47 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         return Collections.max(results.entrySet(), Comparator.comparingDouble(Map.Entry::getValue));
     }
 
-    private boolean respondIfLyrics(@NotNull CommandResponder responder, @NotNull HopperBotPlaylistSong song) {
-        final List<MessageEmbed> lyricEmbeds = song.lyricEmbeds;
-        if (lyricEmbeds == null) {
-            return true;
-        }
-        responder.respond(lyricEmbeds.get(0), getPageButtons("lyrics"+songs.indexOf(song),1,songlistPages));
-        return false;
-    }
-    private void lyricsCommand(@NotNull CommandResponder responder) {
+    private void ifSongPlaying(@NotNull CommandResponder responder, @NotNull BiConsumer<CommandResponder, HopperBotPlaylistSong> action) {
         final HopperBotPlaylistSong song = currentSong();
         if (song == null) {
             responder.respond("No song is currently playing");
         } else {
-            if (respondIfLyrics(responder,song)) {
-                responder.respond("Current song, '"+song.strippedFilename()+"', doesn't have lyrics");
-            }
+            action.accept(responder, song);
         }
     }
-    private void lyricsCommand(@NotNull CommandResponder responder, @NotNull String search) {
+
+    private void ifCloseMatch(@NotNull CommandResponder responder, @NotNull String search, @NotNull BiConsumer<CommandResponder, HopperBotPlaylistSong> action) {
         final Map.Entry<HopperBotPlaylistSong,Double> searchResult = searchSongs(search);
         if (searchResult.getValue() < MIN_SEARCH_CONFIDENCE) {
             responder.respond("Could not find a close match. Try being more specific");
         } else {
-            if (respondIfLyrics(responder,searchResult.getKey())) {
-                responder.respond("Closest match was '"+searchResult.getKey().strippedFilename()+"' but it doesn't have lyrics");
-            }
+            action.accept(responder, searchResult.getKey());
         }
+    }
+
+    private void songInfoCommand(@NotNull CommandResponder responder, @NotNull HopperBotPlaylistSong song) {
+        responder.respond(song.songInfoEmbed);
+    }
+    private void songInfoCommand(@NotNull CommandResponder responder) {
+        ifSongPlaying(responder, this::songInfoCommand);
+    }
+    private void songInfoCommand(@NotNull CommandResponder responder, @NotNull String search) {
+        ifCloseMatch(responder, search, this::songInfoCommand);
+    }
+
+    private void lyricsCommand(@NotNull CommandResponder responder, @NotNull HopperBotPlaylistSong song) {
+        final List<MessageEmbed> lyricEmbeds = song.lyricEmbeds;
+        if (lyricEmbeds == null) {
+            responder.respond("Current song, '"+song.strippedFilename()+"', doesn't have lyrics");
+        } else {
+            responder.respond(lyricEmbeds.get(0), getPageButtons("lyrics"+songs.indexOf(song),1,songlistPages));
+        }
+    }
+    private void lyricsCommand(@NotNull CommandResponder responder) {
+        ifSongPlaying(responder, this::lyricsCommand);
+    }
+    private void lyricsCommand(@NotNull CommandResponder responder, @NotNull String search) {
+        ifCloseMatch(responder, search, this::lyricsCommand);
     }
 
     private void playSongCommand(@NotNull CommandResponder responder, @NotNull User user, @NotNull String search) {
@@ -309,12 +390,12 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
     @CheckReturnValue
     private int getPageNumber(@NotNull ButtonInteractionEvent event) {
-        final String title = event.getMessage().getEmbeds().get(0).getTitle();
-        if (title == null) {
+        final MessageEmbed.AuthorInfo author = event.getMessage().getEmbeds().get(0).getAuthor();
+        if (author == null || author.getName() == null) {
             return -1;
         }
-        final String[] titleWords = title.split(" ");
-        return Integer.parseInt(titleWords[titleWords.length-1].split("/")[0]);
+        final String[] titleWords = author.getName().split(" ");
+        return Integer.parseInt(titleWords[1].split("/")[0]);
     }
     private void runPageButton(@NotNull List<MessageEmbed> pages, @NotNull ButtonInteractionEvent event, @NotNull String @NotNull [] parts) {
         final int newPage = switch (parts[2]) {
@@ -456,7 +537,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     @NotNull
     @CheckReturnValue
     private EmbedBuilder pagedEmbedBase(@NotNull String title, int pageIndex, int maxPages) {
-        return getUtils().getEmbedBase().setTitle(title+" - Page "+(pageIndex+1)+"/"+(maxPages));
+        return getUtils().getEmbedBase().setTitle(title).setAuthor("Page "+(pageIndex+1)+"/"+(maxPages));
     }
 
     @NotNull

@@ -8,8 +8,8 @@ import uk.co.hopperelec.hopperbot.HopperBotFeatures;
 public abstract class HopperBotButtonFeature extends HopperBotCommandFeature {
     public final String featureButtonPrefix;
 
-    public HopperBotButtonFeature(String featureButtonPrefix, @NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, String commandPrefix, HopperBotCommand... commands) {
-        super(builder,featureEnum,commandPrefix,commands);
+    public HopperBotButtonFeature(String featureButtonPrefix, @NotNull JDABuilder builder, @NotNull HopperBotFeatures featureEnum, String commandPrefix) {
+        super(builder,featureEnum,commandPrefix);
         this.featureButtonPrefix = featureButtonPrefix;
     }
 

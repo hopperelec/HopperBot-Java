@@ -20,7 +20,16 @@ public class TempCommandResponder implements CommandResponder {
     public void respond(@NotNull String message) {
         tempReply(eventMessage, message);
     }
-
+    @Override
+    public void respond(@NotNull MessageEmbed embed) {
+        tempReply(eventMessage, embed);
+        eventMessage.replyEmbeds(embed).queue();
+    }
+    @Override
+    public void respond(@NotNull String message, @NotNull List<Button> buttons) {
+        tempReply(eventMessage,message);
+        eventMessage.reply(message).setActionRow(buttons).queue();
+    }
     @Override
     public void respond(@NotNull MessageEmbed embed, @NotNull List<Button> buttons) {
         tempReply(eventMessage, embed);

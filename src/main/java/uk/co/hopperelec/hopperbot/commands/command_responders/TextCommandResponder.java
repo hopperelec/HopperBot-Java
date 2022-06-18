@@ -7,7 +7,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class TextCommandResponder implements CommandResponder {
+public class TextCommandResponder extends CommandResponder {
     @NotNull private final Message eventMessage;
 
     public TextCommandResponder(@NotNull Message eventMessage) {
@@ -16,18 +16,18 @@ public class TextCommandResponder implements CommandResponder {
 
     @Override
     public void respond(@NotNull String message) {
-        eventMessage.reply(message).queue();
+        eventMessage.reply(message).allowedMentions(allowedMentions).queue();
     }
     @Override
     public void respond(@NotNull MessageEmbed embed) {
-        eventMessage.replyEmbeds(embed).queue();
+        eventMessage.replyEmbeds(embed).allowedMentions(allowedMentions).queue();
     }
     @Override
     public void respond(@NotNull String message, @NotNull List<Button> buttons) {
-        eventMessage.reply(message).setActionRow(buttons).queue();
+        eventMessage.reply(message).setActionRow(buttons).allowedMentions(allowedMentions).queue();
     }
     @Override
     public void respond(@NotNull MessageEmbed embed, @NotNull List<Button> buttons) {
-        eventMessage.replyEmbeds(embed).setActionRow(buttons).queue();
+        eventMessage.replyEmbeds(embed).setActionRow(buttons).allowedMentions(allowedMentions).queue();
     }
 }

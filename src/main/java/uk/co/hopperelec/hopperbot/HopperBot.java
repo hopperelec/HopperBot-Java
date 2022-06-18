@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.AllowedMentions;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -97,40 +99,37 @@ public final class HopperBot {
         return stream;
     }
 
-    public static void main(String[] args) {
-        try {
-            final JDABuilder builder = JDABuilder.create(GatewayIntent.GUILD_MEMBERS,GatewayIntent.GUILD_MESSAGES,GatewayIntent.GUILD_VOICE_STATES);
-            builder.setToken(getToken());
-            logger.info("Retrieved token");
-            builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);
-            logger.info("Configured JDA builder");
+    public static void main(String[] args) throws HopperBotLoadingException {
+        AllowedMentions.setDefaultMentions(Collections.emptySet());
+        AllowedMentions.setDefaultMentionRepliedUser(true);
 
-            final Path configPath = Paths.get(System.getProperty("user.dir"),CONFIG_FILE_NAME);
-            final File configFile = configPath.toFile();
-            if (!configFile.exists() || configFile.isDirectory()) {
-                createConfig(configPath);
-                logger.info("Created new config.yml");
-            } else {
-                logger.info("Found config.yml");
-            }
-            final HopperBotConfig config = readConfig(configFile);
-            logger.info("Loaded config");
+        final JDABuilder builder = JDABuilder.create(GatewayIntent.GUILD_MEMBERS,GatewayIntent.GUILD_MESSAGES,GatewayIntent.GUILD_VOICE_STATES);
+        builder.setToken(getToken());
+        logger.info("Retrieved token");
+        builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);
+        logger.info("Configured JDA builder");
 
-            initializeFeatures(config,builder);
-            logger.info("Done initializing features");
-
-            final JDA jda;
-            try {
-                jda = builder.build();
-            } catch (LoginException e) {
-                throw new HopperBotLoadingException("Failed to login to the bot!",e);
-            }
-            HopperBotUtils.createInstance(jda,config);
-            logger.info("Logged into bot");
-
-        } catch (HopperBotLoadingException e) {
-            logger.error("Error trying to load HopperBot",e);
-            System.exit(1);
+        final Path configPath = Paths.get(System.getProperty("user.dir"),CONFIG_FILE_NAME);
+        final File configFile = configPath.toFile();
+        if (!configFile.exists() || configFile.isDirectory()) {
+            createConfig(configPath);
+            logger.info("Created new config.yml");
+        } else {
+            logger.info("Found config.yml");
         }
+        final HopperBotConfig config = readConfig(configFile);
+        logger.info("Loaded config");
+
+        initializeFeatures(config,builder);
+        logger.info("Done initializing features");
+
+        final JDA jda;
+        try {
+            jda = builder.build();
+        } catch (LoginException e) {
+            throw new HopperBotLoadingException("Failed to login to the bot!",e);
+        }
+        HopperBotUtils.createInstance(jda,config);
+        logger.info("Logged into bot");
     }
 }

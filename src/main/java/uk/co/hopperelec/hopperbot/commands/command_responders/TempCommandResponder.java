@@ -3,12 +3,13 @@ package uk.co.hopperelec.hopperbot.commands.command_responders;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class TempCommandResponder implements CommandResponder {
+public class TempCommandResponder extends CommandResponder {
     @NotNull private final Message eventMessage;
     public static final int DELETION_TIME = 10;
 
@@ -18,35 +19,28 @@ public class TempCommandResponder implements CommandResponder {
 
     @Override
     public void respond(@NotNull String message) {
-        tempReply(eventMessage, message);
+        tempReply(eventMessage.reply(message).allowedMentions(allowedMentions),eventMessage);
     }
     @Override
     public void respond(@NotNull MessageEmbed embed) {
-        tempReply(eventMessage, embed);
-        eventMessage.replyEmbeds(embed).queue();
+        tempReply(eventMessage.replyEmbeds(embed).allowedMentions(allowedMentions),eventMessage);
     }
     @Override
     public void respond(@NotNull String message, @NotNull List<Button> buttons) {
-        tempReply(eventMessage,message);
-        eventMessage.reply(message).setActionRow(buttons).queue();
+        tempReply(eventMessage.reply(message).setActionRow(buttons).allowedMentions(allowedMentions),eventMessage);
     }
     @Override
     public void respond(@NotNull MessageEmbed embed, @NotNull List<Button> buttons) {
-        tempReply(eventMessage, embed);
-        eventMessage.replyEmbeds(embed).setActionRow(buttons).queue();
+        tempReply(eventMessage.replyEmbeds(embed).setActionRow(buttons).allowedMentions(allowedMentions),eventMessage);
     }
 
-    public static void tempReply(@NotNull Message message, @NotNull String reply) {
-        message.reply(reply).queue(replyMsg -> {
-            replyMsg.delete().queueAfter(DELETION_TIME, TimeUnit.SECONDS);
+    public static void tempReply(@NotNull MessageAction replyAction, @NotNull Message message) {
+        replyAction.queue(reply -> {
+            reply.delete().queueAfter(DELETION_TIME, TimeUnit.SECONDS);
             message.delete().queueAfter(DELETION_TIME, TimeUnit.SECONDS);
         });
     }
-
-    public static void tempReply(@NotNull Message message, @NotNull MessageEmbed embed) {
-        message.replyEmbeds(embed).queue(replyMsg -> {
-            replyMsg.delete().queueAfter(DELETION_TIME, TimeUnit.SECONDS);
-            message.delete().queueAfter(DELETION_TIME, TimeUnit.SECONDS);
-        });
+    public static void tempReply(@NotNull Message message, @NotNull String replyText) {
+        tempReply(message.reply(replyText),message);
     }
 }

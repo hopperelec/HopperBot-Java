@@ -25,12 +25,12 @@ public class HopperBotListener extends ListenerAdapter {
     @Nullable private static HopperBotConfig config = null;
     private static final Logger logger = LoggerFactory.getLogger(HopperBotListener.class);
 
-    public static void setJDA(@NotNull JDA jda) {
+    synchronized public static void setJDA(@NotNull JDA jda) {
         if (HopperBotListener.jda == null) {
             HopperBotListener.jda = jda;
         }
     }
-    public static void setConfig(@NotNull HopperBotConfig config) {
+    synchronized public static void setConfig(@NotNull HopperBotConfig config) {
         if (HopperBotListener.config == null) {
             HopperBotListener.config = config;
         }
@@ -49,7 +49,7 @@ public class HopperBotListener extends ListenerAdapter {
     @NotNull public static final String BOT_OWNER_DEFAULT_NAME = "hopperelec#3060";
     @NotNull public static final String BOT_OWNER_DEFAULT_ICON = "https://www.hopperelec.co.uk/resources/hopper.png?scale=0.2&padding=30&padding-side=-8&type3D=2&shadow=32&fill=100&outline-width=6&bg=1";
 
-    protected static void logToGuild(@NotNull String message, @NotNull Guild guild) {
+    synchronized protected static void logToGuild(@NotNull String message, @NotNull Guild guild) {
         if (config != null) {
             final HopperBotServerConfig guildConfig = config.getServerConfig(guild.getIdLong());
             if (guildConfig != null) {
@@ -65,7 +65,7 @@ public class HopperBotListener extends ListenerAdapter {
     }
 
     @Nullable
-    protected static String log(@NotNull String message, @Nullable HopperBotFeatures feature) {
+    synchronized protected static String log(@NotNull String message, @Nullable HopperBotFeatures feature) {
         if (config == null) {
             return null;
         }

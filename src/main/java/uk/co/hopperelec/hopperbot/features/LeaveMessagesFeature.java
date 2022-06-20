@@ -17,7 +17,7 @@ public final class LeaveMessagesFeature extends HopperBotFeature {
 
     @Override
     public void onGuildMemberRemove(@NotNull GuildMemberRemoveEvent event) {
-        final Map<String, JsonNode> config = getUtils().getFeatureConfig(event.getGuild(),featureEnum);
+        final Map<String, JsonNode> config = getFeatureConfig(event.getGuild(),featureEnum);
         if (config != null) {
             final TextChannel channel = event.getGuild().getTextChannelById(config.get("channel").asLong());
             if (channel != null) {
@@ -27,7 +27,7 @@ public final class LeaveMessagesFeature extends HopperBotFeature {
                         .replaceAll("\\{id}",event.getUser().getId())
                 ).queue();
             } else {
-                getUtils().logToGuild("leave_messages has not been configured for this server",featureEnum,event.getGuild());
+                logToGuild("leave_messages has not been configured for this server",featureEnum,event.getGuild());
             }
         }
     }

@@ -30,7 +30,7 @@ public final class AutoVCGenFeature extends HopperBotFeature {
 
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
-        final Map<String,JsonNode> config = getUtils().getFeatureConfig(event.getGuild(),featureEnum);
+        final Map<String,JsonNode> config = getFeatureConfig(event.getGuild(),featureEnum);
         if (config != null) {
             channelNames.put(event.getGuild(),new ArrayList<>());
             for (JsonNode channelName : config.get("channel_names")) {
@@ -66,7 +66,7 @@ public final class AutoVCGenFeature extends HopperBotFeature {
                 final List<VoiceChannel> nextChannels = channel.getGuild().getVoiceChannelsByName(autoVCLeft[0]+" "+(++count),false);
                 if (nextChannels.size() != 1) {
                     if (nextChannels.size() != 0) {
-                        getUtils().logToGuild("Multiple channels by name '"+autoVCLeft[0]+" "+count+"' in guild. Please only keep one.",featureEnum,channel.getGuild());
+                        logToGuild("Multiple channels by name '"+autoVCLeft[0]+" "+count+"' in guild. Please only keep one.",featureEnum,channel.getGuild());
                     }
                     break;
                 }

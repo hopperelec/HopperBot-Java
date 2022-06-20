@@ -14,6 +14,6 @@ public abstract class HopperBotFeature extends HopperBotListener {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        getUtils().logGlobally("Feature loaded",featureEnum);
+        logGlobally("Feature loaded",featureEnum);
     }
 }

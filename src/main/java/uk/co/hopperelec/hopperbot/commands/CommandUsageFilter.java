@@ -5,7 +5,7 @@ import net.dv8tion.jda.api.entities.Member;
 
 import javax.annotation.CheckReturnValue;
 
-import static uk.co.hopperelec.hopperbot.HopperBotUtils.BOT_OWNER_ID;
+import static uk.co.hopperelec.hopperbot.HopperBotListener.BOT_OWNER_ID;
 
 public enum CommandUsageFilter {
     IS_BOT_OWNER {

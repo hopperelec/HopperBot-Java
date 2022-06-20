@@ -21,14 +21,18 @@ public final class ServersCommandFeature extends HopperBotFeature {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
-        final EmbedBuilder embedBuilder = getUtils().getEmbedBase();
-        for (HopperBotServerConfig server : getUtils().config().getServers().values()) {
-            if (server.getInvite() != null) {
-                embedBuilder.addField(server.getName(),server.getInvite(),true);
+        if (getConfig() != null) {
+            final EmbedBuilder embedBuilder = getEmbedBase();
+            if (embedBuilder != null) {
+                for (HopperBotServerConfig server : getConfig().getServers().values()) {
+                    if (server.getInvite() != null) {
+                        embedBuilder.addField(server.getName(),server.getInvite(),true);
+                    }
+                }
+                embed = embedBuilder.build();
+                event.getJDA().upsertCommand("servers","Lists invites to all the public servers the bot is in").queue();
             }
         }
-        embed = embedBuilder.build();
-        event.getJDA().upsertCommand("servers","Lists invites to all the public servers the bot is in").queue();
     }
 
     @Override
@@ -42,7 +46,7 @@ public final class ServersCommandFeature extends HopperBotFeature {
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
         if (event.getName().equals("servers")) {
             event.replyEmbeds(embed).queue();
-            getUtils().logToGuild(event.getUser().getId()+" successfully used global slash command /servers",featureEnum,event.getGuild());
+            logToGuild(event.getUser().getId()+" successfully used global slash command /servers",featureEnum,event.getGuild());
         }
     }
 }

@@ -100,15 +100,6 @@ public final class HopperBot {
     }
 
     public static void main(String[] args) throws HopperBotLoadingException {
-        AllowedMentions.setDefaultMentions(Collections.emptySet());
-        AllowedMentions.setDefaultMentionRepliedUser(true);
-
-        final JDABuilder builder = JDABuilder.create(GatewayIntent.GUILD_MEMBERS,GatewayIntent.GUILD_MESSAGES,GatewayIntent.GUILD_VOICE_STATES);
-        builder.setToken(getToken());
-        logger.info("Retrieved token");
-        builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);
-        logger.info("Configured JDA builder");
-
         final Path configPath = Paths.get(System.getProperty("user.dir"),CONFIG_FILE_NAME);
         final File configFile = configPath.toFile();
         if (!configFile.exists() || configFile.isDirectory()) {
@@ -118,7 +109,17 @@ public final class HopperBot {
             logger.info("Found config.yml");
         }
         final HopperBotConfig config = readConfig(configFile);
+        HopperBotListener.setConfig(config);
         logger.info("Loaded config");
+
+        AllowedMentions.setDefaultMentions(Collections.emptySet());
+        AllowedMentions.setDefaultMentionRepliedUser(true);
+
+        final JDABuilder builder = JDABuilder.create(GatewayIntent.GUILD_MEMBERS,GatewayIntent.GUILD_MESSAGES,GatewayIntent.GUILD_VOICE_STATES);
+        builder.setToken(getToken());
+        logger.info("Retrieved token");
+        builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);
+        logger.info("Configured JDA builder");
 
         initializeFeatures(config,builder);
         logger.info("Done initializing features");
@@ -129,7 +130,7 @@ public final class HopperBot {
         } catch (LoginException e) {
             throw new HopperBotLoadingException("Failed to login to the bot!",e);
         }
-        HopperBotUtils.createInstance(jda,config);
+        HopperBotListener.setJDA(jda);
         logger.info("Logged into bot");
     }
 }

@@ -22,7 +22,7 @@ public final class LogCommandFeature extends HopperBotCommandFeature {
             ) {
                 @Override
                 public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
-                    feature.getUtils().logGlobally(content,feature.featureEnum);
+                    logGlobally(content,feature.featureEnum);
                     event.getMessage().addReaction("\uD83D\uDC4D").queue();
                 }
 
@@ -30,7 +30,7 @@ public final class LogCommandFeature extends HopperBotCommandFeature {
                 public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
                     final OptionMapping optionMapping = event.getOption("content");
                     if (optionMapping != null) {
-                        feature.getUtils().logGlobally(optionMapping.getAsString(),feature.featureEnum);
+                        logGlobally(optionMapping.getAsString(),feature.featureEnum);
                         event.reply("\uD83D\uDC4D").setEphemeral(true).queue();
                     }
                 }

@@ -54,7 +54,6 @@ import java.util.function.BiConsumer;
 
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static org.apache.commons.io.FilenameUtils.removeExtension;
-import static uk.co.hopperelec.hopperbot.HopperBotUtils.BOT_OWNER_ID;
 
 public final class PlaylistFeature extends HopperBotButtonFeature implements AudioEventListener {
     @NotNull private static final String SONGS_FILE_LOC = "Playlist/songs.yml";
@@ -102,7 +101,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         @Nullable final String note;
         @Nullable final String lyrics;
         @Nullable final List<MessageEmbed> lyricEmbeds;
-        @NotNull final MessageEmbed songInfoEmbed;
+        @Nullable final MessageEmbed songInfoEmbed;
 
         HopperBotPlaylistSong(@NotNull String filename, @NotNull Map<String,JsonNode> songJsonData, @NotNull PlaylistFeature playlistFeature) {
             this.filename = filename;
@@ -139,27 +138,35 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                 }
                 int index = 0;
                 for (String lyricPage : lyricPages) {
-                    lyricEmbeds.add(playlistFeature.pagedEmbedBase("Lyrics",index++,lyricPages.size()).addField(strippedFilename(),lyricPage,false).build());
+                    final EmbedBuilder embedBuilder = playlistFeature.pagedEmbedBase("Lyrics",index++,lyricPages.size());
+                    if (embedBuilder != null) {
+                        lyricEmbeds.add(embedBuilder.addField(strippedFilename(),lyricPage,false).build());
+                    }
                 }
             } else {
                 lyrics = null;
                 lyricEmbeds = null;
             }
 
-            songInfoEmbed = addBooleanField(
-                addNullableField(
-                        addListField(
-                            addListField(
-                                playlistFeature.getUtils().getEmbedBase()
-                                    .setTitle("Song info")
-                                    .setAuthor(strippedFilename() + " (Click for YouTube video)",fullURL())
-                                    .setImage(thumbnail())
-                                    .addField("Title",title,false),
-                                "Author", authors, true
-                        ), "Singer", singers, true
-                    ), "Note", note, false
-                ), "Lyrics available (/lyrics [song])", lyrics != null, false
-            ).build();
+            final EmbedBuilder embedBuilder = getEmbedBase();
+            if (embedBuilder == null) {
+                songInfoEmbed = null;
+            } else {
+                songInfoEmbed = addBooleanField(
+                        addNullableField(
+                                addListField(
+                                        addListField(
+                                                embedBuilder
+                                                        .setTitle("Song info")
+                                                        .setAuthor(strippedFilename() + " (Click for YouTube video)",fullURL())
+                                                        .setImage(thumbnail())
+                                                        .addField("Title",title,false),
+                                                "Author", authors, true
+                                        ), "Singer", singers, true
+                                ), "Note", note, false
+                        ), "Lyrics available (/lyrics [song])", lyrics != null, false
+                ).build();
+            }
         }
 
         @NotNull
@@ -328,7 +335,11 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     private void songInfoCommand(@NotNull CommandResponder responder, @NotNull HopperBotPlaylistSong song) {
-        responder.respond(song.songInfoEmbed);
+        if (song.songInfoEmbed == null) {
+            responder.respond("Playlist loaded too early so the embed for this song's info could not be generated. Please contact bot developer.");
+        } else {
+            responder.respond(song.songInfoEmbed);
+        }
     }
     private void songInfoCommand(@NotNull CommandResponder responder) {
         ifSongPlaying(responder, this::songInfoCommand);
@@ -426,7 +437,9 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     private void unsetPresence() {
-        getUtils().jda().getPresence().setActivity(null);
+        if (getJDA() != null) {
+            getJDA().getPresence().setActivity(null);
+        }
     }
 
     private void playNextSong(int attempts) {
@@ -435,10 +448,10 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                 playSong(nextSong(), attempts);
                 return;
             } else {
-                getUtils().logGlobally("Nobody currently listening- pausing playback",featureEnum);
+                logGlobally("Nobody currently listening- pausing playback",featureEnum);
             }
         } else {
-            getUtils().logGlobally("Maximum attempts at playing the next song ("+MAX_NEXT_SONG_ATTEMPTS+") reached",featureEnum);
+            logGlobally("Maximum attempts at playing the next song ("+MAX_NEXT_SONG_ATTEMPTS+") reached",featureEnum);
         }
         unsetPresence();
     }
@@ -475,14 +488,16 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     private synchronized void playSong(@NotNull HopperBotPlaylistSong song, int attempts) {
-        getUtils().jda().getPresence().setActivity(Activity.listening(song.strippedFilename()));
-        getUtils().logGlobally("Now trying to play "+song.filename,featureEnum);
+        if (getJDA() != null) {
+            getJDA().getPresence().setActivity(Activity.listening(song.strippedFilename()));
+        }
+        logGlobally("Now trying to play "+song.filename,featureEnum);
 
         final String songFileLocation = ABSOLUTE_SONGS_DIR_LOC+File.separator+song.filename;
         playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                getUtils().logGlobally("Successfully loaded "+song.filename,featureEnum);
+                logGlobally("Successfully loaded "+song.filename,featureEnum);
                 player.playTrack(track);
                 lastThreeSongs.add(song);
                 if (lastThreeSongs.size() == 4) {
@@ -497,13 +512,13 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
 
             @Override
             public void noMatches() {
-                getUtils().logGlobally("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),featureEnum);
+                logGlobally("Couldn't find song at "+songFileLocation.replace(File.separator,"\\"+File.separator),featureEnum);
                 playNextSong(attempts+1);
             }
 
             @Override
             public void loadFailed(FriendlyException exception) {
-                getUtils().logGlobally("Failed loading "+song.filename,featureEnum);
+                logGlobally("Failed loading "+song.filename,featureEnum);
                 playNextSong(attempts+1);
             }
         });
@@ -534,10 +549,14 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         }).toList();
     }
 
-    @NotNull
+    @Nullable
     @CheckReturnValue
     private EmbedBuilder pagedEmbedBase(@NotNull String title, int pageIndex, int maxPages) {
-        return getUtils().getEmbedBase().setTitle(title).setAuthor("Page "+(pageIndex+1)+"/"+(maxPages));
+        final EmbedBuilder embedBuilder = getEmbedBase();
+        if (embedBuilder == null) {
+            return null;
+        }
+        return embedBuilder.setTitle(title).setAuthor("Page "+(pageIndex+1)+"/"+(maxPages));
     }
 
     @NotNull
@@ -560,7 +579,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
 
-        final JsonNode songsDataNode = getUtils().getYAMLFile(featureEnum, SONGS_FILE_LOC, JsonNode.class);
+        final JsonNode songsDataNode = getYAMLFile(featureEnum, SONGS_FILE_LOC, JsonNode.class);
         if (songsDataNode == null) {
             return;
         }
@@ -569,7 +588,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
             song.getValue().fields().forEachRemaining(field -> songJsonData.put(field.getKey(), field.getValue()));
             songs.add(new HopperBotPlaylistSong(song.getKey(), songJsonData, this));
         });
-        getUtils().logGlobally("Serialized songs",featureEnum);
+        logGlobally("Serialized songs",featureEnum);
 
         player.addListener(this);
         if (anyoneListening) {
@@ -593,7 +612,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     @CheckForNull
     @CheckReturnValue
     private VoiceChannel getVoiceChannelFor(@NotNull Guild guild) {
-        final Map<String, JsonNode> config = getUtils().getFeatureConfig(guild,featureEnum);
+        final Map<String, JsonNode> config = getFeatureConfig(guild,featureEnum);
         if (config == null) {
             return null;
         }
@@ -620,7 +639,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     public void onGuildReady(@NotNull GuildReadyEvent event) {
         final VoiceChannel voiceChannel = getVoiceChannelFor(event.getGuild());
         if (voiceChannel == null) {
-            getUtils().logToGuild("Could not find playlist voice channel",event.getGuild());
+            logToGuild("Could not find playlist voice channel",event.getGuild());
         } else {
             event.getGuild().getAudioManager().openAudioConnection(voiceChannel);
             event.getGuild().getAudioManager().setSendingHandler(sendHandler);
@@ -640,7 +659,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
 
     @Override
     public void onGuildVoiceLeave(@NotNull GuildVoiceLeaveEvent event) {
-        if (getUtils().usesFeature(event.getGuild(),featureEnum) && !findAnyoneListeningAtAll()) {
+        if (usesFeature(event.getGuild(),featureEnum) && !findAnyoneListeningAtAll()) {
             player.stopTrack();
             lastThreeSongs.clear();
             unsetPresence();

@@ -72,7 +72,7 @@ public final class PurgeCommandFeature extends HopperBotCommandFeature {
                         future.get();
                     } catch (InterruptedException | ExecutionException e) {
                         responder.respond("Failed to purge some messages");
-                        feature.getUtils().logToGuild("Failed to purge some messages: "+e.getMessage(), feature.featureEnum, channel.getGuild());
+                        logToGuild("Failed to purge some messages: "+e.getMessage(), feature.featureEnum, channel.getGuild());
                     }
                 });
             responder.respond("Messages purged!");

@@ -8,7 +8,7 @@ public class HopperBotAddon<A extends Enum<A>> extends HopperBotListener {
     @NotNull public final HopperBotFeatures parentFeatureEnum;
     protected final HopperBotFeature parentFeature;
 
-    public HopperBotAddon(@NotNull HopperBotFeatures parentFeatureEnum, @NotNull HopperBotFeature parentFeature, @NotNull A addonEnum) {
+    protected HopperBotAddon(@NotNull HopperBotFeatures parentFeatureEnum, @NotNull HopperBotFeature parentFeature, @NotNull A addonEnum) {
         this.parentFeatureEnum = parentFeatureEnum;
         this.parentFeature = parentFeature;
         this.addonEnum = addonEnum;
@@ -16,6 +16,6 @@ public class HopperBotAddon<A extends Enum<A>> extends HopperBotListener {
 
     @Override
     public void onReady(@NotNull ReadyEvent event) {
-        getUtils().logGlobally("Addon '"+addonEnum+"' loaded",parentFeatureEnum);
+        logGlobally("Addon '"+addonEnum+"' loaded",parentFeatureEnum);
     }
 }

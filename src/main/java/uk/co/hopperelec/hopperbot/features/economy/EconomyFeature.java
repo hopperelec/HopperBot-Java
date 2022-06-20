@@ -22,12 +22,12 @@ public final class EconomyFeature extends HopperBotCommandFeature {
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
 
-        final SimpleMySQLLoginDetails dbLogin = getUtils().getYAMLFile(featureEnum,dbLoginFileLocation,SimpleMySQLLoginDetails.class);
+        final SimpleMySQLLoginDetails dbLogin = getYAMLFile(featureEnum,dbLoginFileLocation,SimpleMySQLLoginDetails.class);
         if (dbLogin != null) {
             final MysqlDataSource mysql = dbLogin.getDataSource();
             try (Connection conn = mysql.getConnection()) {
                 if (conn.isValid(1000)) {
-                    getUtils().logGlobally("Successfully connected to database",featureEnum);
+                    logGlobally("Successfully connected to database",featureEnum);
                 } else {
                     throw new SQLException("Could not establish database connection.");
                 }

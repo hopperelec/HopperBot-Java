@@ -21,18 +21,14 @@ public final class ServersCommandFeature extends HopperBotFeature {
     @Override
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
-        if (getConfig() != null) {
-            final EmbedBuilder embedBuilder = getEmbedBase();
-            if (embedBuilder != null) {
-                for (HopperBotServerConfig server : getConfig().getServers().values()) {
-                    if (server.getInvite() != null) {
-                        embedBuilder.addField(server.getName(),server.getInvite(),true);
-                    }
-                }
-                embed = embedBuilder.build();
-                event.getJDA().upsertCommand("servers","Lists invites to all the public servers the bot is in").queue();
+        final EmbedBuilder embedBuilder = getEmbedBase();
+        for (HopperBotServerConfig server : getConfig().getServers().values()) {
+            if (server.getInvite() != null) {
+                embedBuilder.addField(server.getName(),server.getInvite(),true);
             }
         }
+        embed = embedBuilder.build();
+        event.getJDA().upsertCommand("servers","Lists invites to all the public servers the bot is in").queue();
     }
 
     @Override

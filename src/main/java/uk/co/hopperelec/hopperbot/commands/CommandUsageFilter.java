@@ -5,13 +5,13 @@ import net.dv8tion.jda.api.entities.Member;
 
 import javax.annotation.CheckReturnValue;
 
-import static uk.co.hopperelec.hopperbot.HopperBotListener.BOT_OWNER_ID;
+import static uk.co.hopperelec.hopperbot.HopperBotListener.getConfig;
 
 public enum CommandUsageFilter {
     IS_BOT_OWNER {
         @Override
         public boolean check(Member author, String content, HopperBotCommandFeature feature) {
-            return author.getIdLong() == BOT_OWNER_ID;
+            return author.getIdLong() == getConfig().getBotOwnerId();
         }
     },
 

@@ -88,31 +88,29 @@ public class HopperBotCommandHandler extends HopperBotListener {
 
     @Override
     public void onGuildReady(@NotNull GuildReadyEvent event) {
-        if (getConfig() != null) {
-            final HopperBotServerConfig serverConfig = getConfig().getServerConfig(event.getGuild().getIdLong());
-            if (serverConfig != null) {
-                CommandListUpdateAction commandListUpdateAction = event.getGuild().updateCommands();
-                for (HopperBotCommandFeature feature : features) {
-                    if (serverConfig.usesFeature(feature.featureEnum)) {
-                        feature.guilds.add(event.getGuild());
-                        for (HopperBotCommand<?> command : feature.commands) {
+        final HopperBotServerConfig serverConfig = getServerConfig(event.getGuild().getIdLong());
+        if (serverConfig != null) {
+            CommandListUpdateAction commandListUpdateAction = event.getGuild().updateCommands();
+            for (HopperBotCommandFeature feature : features) {
+                if (serverConfig.usesFeature(feature.featureEnum)) {
+                    feature.guilds.add(event.getGuild());
+                    for (HopperBotCommand<?> command : feature.commands) {
+                        commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
+                    }
+                    Set<HopperBotCommand<?>> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
+                    if (extraCommands != null) {
+                        for (HopperBotCommand<?> command : extraCommands) {
                             commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
-                        }
-                        Set<HopperBotCommand<?>> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
-                        if (extraCommands != null) {
-                            for (HopperBotCommand<?> command : extraCommands) {
-                                commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
-                            }
                         }
                     }
                 }
-                commandListUpdateAction.queue(null,new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, error -> {
-                    logToGuild("Missing Oauth2 scope 'applications.commands' which is needed to be able to add slash commands to the server. Re-invite the bot using this link: "+
-                            "https://discord.com/api/oauth2/authorize?client_id=769709648092856331&scope=bot%20applications.commands&permissions=8",null,event.getGuild());
-                }));
-            } else {
-                logToGuild("Bot is in guild "+event.getGuild().getId()+" which has not been configured",null,event.getGuild());
             }
+            commandListUpdateAction.queue(null,new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, error -> {
+                logToGuild("Missing Oauth2 scope 'applications.commands' which is needed to be able to add slash commands to the server. Re-invite the bot using this link: "+
+                        "https://discord.com/api/oauth2/authorize?client_id=769709648092856331&scope=bot%20applications.commands&permissions=8",null,event.getGuild());
+            }));
+        } else {
+            logToGuild("Bot is in guild "+event.getGuild().getId()+" which has not been configured",null,event.getGuild());
         }
     }
 }

@@ -34,7 +34,7 @@ public final class HopperBot {
     private final static String CONFIG_RESOURCE_PATH = "/config.yml";
     private final static String CONFIG_FILE_NAME = "config.yml";
 
-    private static class HopperBotLoadingException extends Exception {
+    private static class HopperBotLoadingException extends RuntimeException {
         public HopperBotLoadingException(String message) {
             super(message);
         }

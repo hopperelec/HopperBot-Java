@@ -101,7 +101,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         @Nullable final String note;
         @Nullable final String lyrics;
         @Nullable final List<MessageEmbed> lyricEmbeds;
-        @Nullable final MessageEmbed songInfoEmbed;
+        final MessageEmbed songInfoEmbed;
 
         HopperBotPlaylistSong(@NotNull String filename, @NotNull Map<String,JsonNode> songJsonData, @NotNull PlaylistFeature playlistFeature) {
             this.filename = filename;
@@ -139,34 +139,27 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
                 int index = 0;
                 for (String lyricPage : lyricPages) {
                     final EmbedBuilder embedBuilder = playlistFeature.pagedEmbedBase("Lyrics",index++,lyricPages.size());
-                    if (embedBuilder != null) {
-                        lyricEmbeds.add(embedBuilder.addField(strippedFilename(),lyricPage,false).build());
-                    }
+                    lyricEmbeds.add(embedBuilder.addField(strippedFilename(),lyricPage,false).build());
                 }
             } else {
                 lyrics = null;
                 lyricEmbeds = null;
             }
 
-            final EmbedBuilder embedBuilder = getEmbedBase();
-            if (embedBuilder == null) {
-                songInfoEmbed = null;
-            } else {
-                songInfoEmbed = addBooleanField(
-                        addNullableField(
-                                addListField(
-                                        addListField(
-                                                embedBuilder
-                                                        .setTitle("Song info")
-                                                        .setAuthor(strippedFilename() + " (Click for YouTube video)",fullURL())
-                                                        .setImage(thumbnail())
-                                                        .addField("Title",title,false),
-                                                "Author", authors, true
-                                        ), "Singer", singers, true
-                                ), "Note", note, false
-                        ), "Lyrics available (/lyrics [song])", lyrics != null, false
-                ).build();
-            }
+            songInfoEmbed = addBooleanField(
+                    addNullableField(
+                            addListField(
+                                    addListField(
+                                            getEmbedBase()
+                                                    .setTitle("Song info")
+                                                    .setAuthor(strippedFilename() + " (Click for YouTube video)",fullURL())
+                                                    .setImage(thumbnail())
+                                                    .addField("Title",title,false),
+                                            "Author", authors, true
+                                    ), "Singer", singers, true
+                            ), "Note", note, false
+                    ), "Lyrics available (/lyrics [song])", lyrics != null, false
+            ).build();
         }
 
         @NotNull
@@ -364,7 +357,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     private void playSongCommand(@NotNull CommandResponder responder, @NotNull User user, @NotNull String search) {
-        if (user.getIdLong() == BOT_OWNER_ID || onlyPersonListening(user)) {
+        if (user.getIdLong() == getConfig().getBotOwnerId() || onlyPersonListening(user)) {
             final Map.Entry<HopperBotPlaylistSong,Double> searchResult = searchSongs(search);
             if (searchResult.getValue() < MIN_SEARCH_CONFIDENCE) {
                 responder.respond("Could not find a close match. Try being more specific");
@@ -437,9 +430,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     private void unsetPresence() {
-        if (getJDA() != null) {
-            getJDA().getPresence().setActivity(null);
-        }
+        getJDA().getPresence().setActivity(null);
     }
 
     private void playNextSong(int attempts) {
@@ -488,9 +479,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     private synchronized void playSong(@NotNull HopperBotPlaylistSong song, int attempts) {
-        if (getJDA() != null) {
-            getJDA().getPresence().setActivity(Activity.listening(song.strippedFilename()));
-        }
+        getJDA().getPresence().setActivity(Activity.listening(song.strippedFilename()));
         logGlobally("Now trying to play "+song.filename,featureEnum);
 
         final String songFileLocation = ABSOLUTE_SONGS_DIR_LOC+File.separator+song.filename;
@@ -549,14 +538,10 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         }).toList();
     }
 
-    @Nullable
+    @NotNull
     @CheckReturnValue
     private EmbedBuilder pagedEmbedBase(@NotNull String title, int pageIndex, int maxPages) {
-        final EmbedBuilder embedBuilder = getEmbedBase();
-        if (embedBuilder == null) {
-            return null;
-        }
-        return embedBuilder.setTitle(title).setAuthor("Page "+(pageIndex+1)+"/"+(maxPages));
+        return getEmbedBase().setTitle(title).setAuthor("Page "+(pageIndex+1)+"/"+(maxPages));
     }
 
     @NotNull
@@ -632,7 +617,8 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
     @CheckReturnValue
     private boolean findAnyoneListeningAtAll() {
-        return anyoneListening = guilds.stream().anyMatch(this::isAnyoneListeningIn);
+        anyoneListening = guilds.stream().anyMatch(this::isAnyoneListeningIn);
+        return anyoneListening;
     }
 
     @Override

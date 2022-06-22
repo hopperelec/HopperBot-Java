@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.AllowedMentions;
 import net.dv8tion.jda.api.utils.cache.CacheFlag;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +26,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.fasterxml.jackson.databind.PropertyNamingStrategies.SNAKE_CASE;
+import static net.dv8tion.jda.api.requests.GatewayIntent.*;
 
 public final class HopperBot {
     public final static Logger logger = LoggerFactory.getLogger(HopperBot.class);
@@ -115,7 +115,7 @@ public final class HopperBot {
         AllowedMentions.setDefaultMentions(Collections.emptySet());
         AllowedMentions.setDefaultMentionRepliedUser(true);
 
-        final JDABuilder builder = JDABuilder.create(GatewayIntent.GUILD_MEMBERS,GatewayIntent.GUILD_MESSAGES,GatewayIntent.GUILD_VOICE_STATES);
+        final JDABuilder builder = JDABuilder.create(GUILD_MEMBERS,GUILD_MESSAGES,GUILD_VOICE_STATES,GUILD_MESSAGE_REACTIONS);
         builder.setToken(getToken());
         logger.info("Retrieved token");
         builder.disableCache(CacheFlag.ACTIVITY,CacheFlag.EMOTE,CacheFlag.CLIENT_STATUS,CacheFlag.ONLINE_STATUS,CacheFlag.ROLE_TAGS,CacheFlag.MEMBER_OVERRIDES);

@@ -1,6 +1,8 @@
 package uk.co.hopperelec.hopperbot.features;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
@@ -24,6 +26,7 @@ import net.dv8tion.jda.api.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -63,12 +66,15 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     private static final int SONGLIST_MAX_LINES = 31;
     private static final int MAX_NEXT_SONG_ATTEMPTS = 5;
     private static final double MIN_SEARCH_CONFIDENCE = 0.7;
+    private static final int playSong_VOTE_EXPIRY_SECONDS = 120;
+    private static final String playSong_VOTE_EMOJI = "\u2705";
 
     @NotNull private final List<HopperBotPlaylistSong> songs = new ArrayList<>();
     @NotNull private final List<HopperBotPlaylistSong> lastThreeSongs = new ArrayList<>(3);
     @NotNull private final List<MessageEmbed> songlistPages = new ArrayList<>();
     @NotNull private final Random random = new Random();
     @NotNull private final JaroWinklerSimilarity jaroWinklerSimilarity = new JaroWinklerSimilarity();
+    @NotNull private final BiMap<Message,HopperBotPlaylistSong> playSongVoteMessages = HashBiMap.create();
 
     private boolean anyoneListening = false;
     @NotNull private final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
@@ -102,6 +108,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         @Nullable final String lyrics;
         @Nullable final List<MessageEmbed> lyricEmbeds;
         final MessageEmbed songInfoEmbed;
+        @Nullable Timer voteExpiryTimer = null;
 
         HopperBotPlaylistSong(@NotNull String filename, @NotNull Map<String,JsonNode> songJsonData, @NotNull PlaylistFeature playlistFeature) {
             this.filename = filename;
@@ -277,6 +284,56 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         newSingleThreadScheduledExecutor().scheduleAtFixedRate(() -> frame = player.provide(), 20, 20, TimeUnit.MILLISECONDS);
     }
 
+    private enum WhoListening {
+        NOBODY, OTHER_GUILDS, ONLY_GUILD, ONLY_USER
+    }
+    @CheckReturnValue
+    private WhoListening onlyUserOrGuildListening(@NotNull User user) {
+        boolean selfFound = false;
+        boolean otherUsers = false;
+        for (Guild guild : guilds) {
+            final VoiceChannel voiceChannel = getVoiceChannelFor(guild);
+            if (selfFound) {
+                if (isAnyoneListeningIn(voiceChannel)) {
+                    return WhoListening.OTHER_GUILDS;
+                }
+            } else if (voiceChannel != null) {
+                for (Member member : voiceChannel.getMembers()) {
+                    if (member.getUser() == user) {
+                        selfFound = true;
+                    } else if (!member.getUser().isBot()) {
+                        otherUsers = true;
+                    }
+                }
+                if (!selfFound && otherUsers) {
+                    return WhoListening.OTHER_GUILDS;
+                }
+            }
+        }
+        if (selfFound) {
+            return otherUsers ? WhoListening.ONLY_GUILD : WhoListening.ONLY_USER;
+        }
+        return WhoListening.NOBODY;
+    }
+
+    @CheckReturnValue
+    private boolean onlyGuildListening(@NotNull Guild guildToCheck) {
+        boolean selfFound = false;
+        for (Guild guild : guilds) {
+            final VoiceChannel voiceChannel = getVoiceChannelFor(guild);
+            final boolean listenedTo = isAnyoneListeningIn(voiceChannel);
+            if (guild == guildToCheck) {
+                selfFound = true;
+                if (voiceChannel == null || !listenedTo) {
+                    return false;
+                }
+            } else if (listenedTo) {
+                return false;
+            }
+        }
+        return selfFound;
+    }
+
     @CheckReturnValue
     private boolean onlyPersonListening(@NotNull User user) {
         boolean selfFound = false;
@@ -356,17 +413,59 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
         ifCloseMatch(responder, search, this::lyricsCommand);
     }
 
+    private void playSongVoteExpire(@NotNull Message message, @NotNull HopperBotPlaylistSong song) {
+        message.editMessage("~~"+message.getContentRaw()+"~~").queue();
+        playSongVoteMessages.remove(message);
+        song.voteExpiryTimer = null;
+    }
+    private void playSongCreateVote(@NotNull Message message, @NotNull HopperBotPlaylistSong song) {
+        message.addReaction(playSong_VOTE_EMOJI).queue();
+        final Timer expiry = new Timer();
+        expiry.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                playSongVoteExpire(message,song);
+            }
+        }, 1000 * playSong_VOTE_EXPIRY_SECONDS);
+        playSongVoteMessages.put(message,song);
+        song.voteExpiryTimer = expiry;
+    }
     private void playSongCommand(@NotNull CommandResponder responder, @NotNull User user, @NotNull String search) {
-        if (user.getIdLong() == getConfig().getBotOwnerId() || onlyPersonListening(user)) {
-            final Map.Entry<HopperBotPlaylistSong,Double> searchResult = searchSongs(search);
-            if (searchResult.getValue() < MIN_SEARCH_CONFIDENCE) {
-                responder.respond("Could not find a close match. Try being more specific");
+        final boolean vote;
+        if (user.getIdLong() == getConfig().getBotOwnerId()) {
+            vote = false;
+        } else {
+            final WhoListening whoListening = onlyUserOrGuildListening(user);
+            if (whoListening == WhoListening.NOBODY) {
+                responder.respond("You're not listening; request denied.");
+                return;
+            } else if (whoListening == WhoListening.OTHER_GUILDS) {
+                responder.respond("Another guild is listening right now; require denied.");
+                return;
+            } else {
+                vote = whoListening == WhoListening.ONLY_GUILD;
+            }
+        }
+        final Map.Entry<HopperBotPlaylistSong,Double> searchResult = searchSongs(search);
+        if (searchResult.getValue() < MIN_SEARCH_CONFIDENCE) {
+            responder.respond("Could not find a close match. Try being more specific!");
+        } else {
+            final String songName = searchResult.getKey().strippedFilename();
+            if (vote) {
+                if (playSongVoteMessages.containsValue(searchResult.getKey())) {
+                    responder.respond("This song has already been suggested recently; vote for it here: "+playSongVoteMessages.inverse().get(searchResult.getKey()).getJumpUrl());
+                } else {
+                    responder.respond("You're not the only person listening right now, so everyone else must agree to listen to this song first. " +
+                                    "If everyone else listening reacts to this message with "+playSong_VOTE_EMOJI+" " +
+                                    "within **"+playSong_VOTE_EXPIRY_SECONDS+" seconds**, " +
+                                    "this song will be played: **"+songName+"**",
+                            message -> playSongCreateVote(message,searchResult.getKey())
+                    );
+                }
             } else {
                 playSong(searchResult.getKey(),0);
-                responder.respond("Attempting to play closest match: "+searchResult.getKey().strippedFilename());
+                responder.respond("Attempting to play closest match: "+songName);
             }
-        } else {
-            responder.respond("You can only play a song if you're the only person listening to the playlist");
         }
     }
 
@@ -481,6 +580,10 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     private synchronized void playSong(@NotNull HopperBotPlaylistSong song, int attempts) {
         getJDA().getPresence().setActivity(Activity.listening(song.strippedFilename()));
         logGlobally("Now trying to play "+song.filename,featureEnum);
+        if (song.voteExpiryTimer != null) {
+            song.voteExpiryTimer.cancel();
+            playSongVoteExpire(playSongVoteMessages.inverse().get(song),song);
+        }
 
         final String songFileLocation = ABSOLUTE_SONGS_DIR_LOC+File.separator+song.filename;
         playerManager.loadItem(songFileLocation, new AudioLoadResultHandler() {
@@ -605,7 +708,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
 
     @CheckReturnValue
-    private boolean isAnyoneListeningIn(VoiceChannel voiceChannel) {
+    private boolean isAnyoneListeningIn(@Nullable VoiceChannel voiceChannel) {
         if (voiceChannel == null) {
             return false;
         }
@@ -649,6 +752,28 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
             player.stopTrack();
             lastThreeSongs.clear();
             unsetPresence();
+        }
+    }
+
+    @Override
+    public void onMessageReactionAdd(@NotNull MessageReactionAddEvent event) {
+        System.out.println(event.getReactionEmote().getEmoji());
+        System.out.println(playSong_VOTE_EMOJI);
+        if (event.getReactionEmote().getEmoji().equals(playSong_VOTE_EMOJI)) {
+            event.retrieveMessage().queue(message -> {
+                if (playSongVoteMessages.containsKey(message)) {
+                    event.getReaction().retrieveUsers().queue(usersWhoReacted -> {
+                        if (guilds.stream().map(this::getVoiceChannelFor)
+                                .filter(Objects::nonNull)
+                                .flatMap(voiceChannel -> voiceChannel.getMembers().stream())
+                                .noneMatch(member -> !member.getUser().isBot() && !usersWhoReacted.contains(member.getUser()))) {
+                            final HopperBotPlaylistSong song = playSongVoteMessages.get(message);
+                            message.reply("Vote won! Attempting to play "+song.strippedFilename()).queue();
+                            playSong(song,0);
+                        }
+                    });
+                }
+            });
         }
     }
 }

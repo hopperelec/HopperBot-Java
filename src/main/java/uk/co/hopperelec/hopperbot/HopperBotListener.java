@@ -133,7 +133,7 @@ public class HopperBotListener extends ListenerAdapter {
         final File file = Paths.get(System.getProperty("user.dir"),fileLocation).toFile();
         try {
             if (file.createNewFile()) {
-                HopperBot.logger.warn(fileLocation+" couldn't be found. An empty file has been created for you. Please enter the host, name, user and password into it");
+                HopperBot.logger.warn(fileLocation+" couldn't be found. An empty file has been created for you.");
                 return null;
             } else {
                 logGlobally("Found "+fileLocation,feature);

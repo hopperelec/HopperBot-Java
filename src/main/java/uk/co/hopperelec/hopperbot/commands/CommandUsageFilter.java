@@ -11,7 +11,7 @@ public enum CommandUsageFilter {
     IS_BOT_OWNER {
         @Override
         public boolean check(Member author, String content, HopperBotCommandFeature feature) {
-            return author.getIdLong() == getConfig().getBotOwnerId();
+            return author.getIdLong() == getConfig().botOwnerId();
         }
     },
 

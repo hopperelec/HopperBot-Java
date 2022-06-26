@@ -21,25 +21,28 @@ public final class InfoCommandsFeature extends HopperBotCommandFeature {
 
     @Override
     @NotNull
-    public Set<HopperBotCommand<?>> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
+    public Set<HopperBotCommand<?>> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotGuildConfig guildConfig) {
         Set<HopperBotCommand<?>> extraCommands = new HashSet<>();
-        for (Map.Entry<String, JsonNode> commandConfig : serverConfig.getFeatureConfig(featureEnum).entrySet()) {
-            final String desc = commandConfig.getValue().asText();
-            final HopperBotCommand<?> command = new HopperBotCommand<>(this, commandConfig.getKey(), desc, null, null) {
-                @Override
-                public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
-                    if (event.getGuild() == guild) {
-                        event.getMessage().reply(desc).queue();
+        Map<String, JsonNode> featureConfig = guildConfig.getFeatureConfig(featureEnum);
+        if (featureConfig != null) {
+            for (Map.Entry<String, JsonNode> commandConfig : featureConfig.entrySet()) {
+                final String desc = commandConfig.getValue().asText();
+                final HopperBotCommand<?> command = new HopperBotCommand<>(this, commandConfig.getKey(), desc, null, null) {
+                    @Override
+                    public void runTextCommand(@NotNull MessageReceivedEvent event, @NotNull String content) {
+                        if (event.getGuild() == guild) {
+                            event.getMessage().reply(desc).queue();
+                        }
                     }
-                }
 
-                @Override
-                public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
-                    event.reply(desc).queue();
-                }
-            };
-            commands.add(command);
-            extraCommands.add(command);
+                    @Override
+                    public void runSlashCommand(@NotNull SlashCommandInteractionEvent event) {
+                        event.reply(desc).queue();
+                    }
+                };
+                commands.add(command);
+                extraCommands.add(command);
+            }
         }
         return extraCommands;
     }

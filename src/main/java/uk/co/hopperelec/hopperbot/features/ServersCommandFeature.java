@@ -9,7 +9,7 @@ import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.jetbrains.annotations.NotNull;
 import uk.co.hopperelec.hopperbot.HopperBotFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
-import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
+import uk.co.hopperelec.hopperbot.HopperBotGuildConfig;
 
 public final class ServersCommandFeature extends HopperBotFeature {
     private MessageEmbed embed;
@@ -22,9 +22,9 @@ public final class ServersCommandFeature extends HopperBotFeature {
     public void onReady(@NotNull ReadyEvent event) {
         super.onReady(event);
         final EmbedBuilder embedBuilder = getEmbedBase();
-        for (HopperBotServerConfig server : getConfig().getServers().values()) {
-            if (server.getInvite() != null) {
-                embedBuilder.addField(server.getName(),server.getInvite(),true);
+        for (HopperBotGuildConfig guildConfig : getConfig().guilds().values()) {
+            if (guildConfig.getInvite() != null) {
+                embedBuilder.addField(guildConfig.name(),guildConfig.getInvite(),true);
             }
         }
         embed = embedBuilder.build();

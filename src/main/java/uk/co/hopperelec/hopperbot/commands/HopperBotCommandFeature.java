@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import uk.co.hopperelec.hopperbot.HopperBotFeature;
 import uk.co.hopperelec.hopperbot.HopperBotFeatures;
-import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
+import uk.co.hopperelec.hopperbot.HopperBotGuildConfig;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.CheckReturnValue;
@@ -30,7 +30,7 @@ public class HopperBotCommandFeature extends HopperBotFeature {
     @Nullable
     @CheckForNull
     @CheckReturnValue
-    public Set<HopperBotCommand<?>> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotServerConfig serverConfig) {
+    public Set<HopperBotCommand<?>> getExtraCommands(@NotNull Guild guild, @NotNull HopperBotGuildConfig guildConfig) {
         return null;
     }
 }

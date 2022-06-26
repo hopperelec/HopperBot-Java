@@ -52,12 +52,12 @@ public class HopperBotListener extends ListenerAdapter {
 
     synchronized protected static void logToGuild(@NotNull String message, @NotNull Guild guild) {
         if (config != null) {
-            final HopperBotServerConfig guildConfig = getServerConfig(guild.getIdLong());
+            final HopperBotGuildConfig guildConfig = getGuildConfig(guild);
             if (guildConfig != null) {
-                final long channelId = guildConfig.getLogChannel();
+                final long channelId = guildConfig.logChannel();
                 final TextChannel logChannel = guild.getTextChannelById(channelId);
                 if (logChannel == null) {
-                    HopperBot.logger.error("The log channel for {} ({}) could not be found!", guildConfig.getName(), channelId);
+                    HopperBot.logger.error("The log channel for {} ({}) could not be found!", guildConfig.name(), channelId);
                 } else {
                     logChannel.sendMessage(message).queue();
                 }
@@ -68,7 +68,7 @@ public class HopperBotListener extends ListenerAdapter {
     @NotNull
     synchronized protected static String log(@NotNull String message, @Nullable HopperBotFeatures feature) {
         final String featureName = feature == null ? "main" : feature.name();
-        message = config.getLogFormat().replaceAll("\\{message}", message).replaceAll("\\{feature}", featureName);
+        message = config.logFormat().replaceAll("\\{message}", message).replaceAll("\\{feature}", featureName);
         HopperBot.logger.info(message);
         return message;
     }
@@ -91,36 +91,41 @@ public class HopperBotListener extends ListenerAdapter {
 
     @Nullable
     @CheckReturnValue
-    protected static HopperBotServerConfig getServerConfig(Long id) {
-        return config.getServers().get(id);
+    protected static HopperBotGuildConfig getGuildConfig(Long id) {
+        return config.guilds().get(id);
+    }
+    @Nullable
+    @CheckReturnValue
+    protected static HopperBotGuildConfig getGuildConfig(Guild guild) {
+        return getGuildConfig(guild.getIdLong());
     }
 
     @Nullable
     @CheckReturnValue
     protected static Map<String, JsonNode> getFeatureConfig(@NotNull Guild guild, @NotNull HopperBotFeatures feature) {
-        final HopperBotServerConfig serverConfig = getServerConfig(guild.getIdLong());
-        if (serverConfig == null) {
+        final HopperBotGuildConfig guildConfig = getGuildConfig(guild.getIdLong());
+        if (guildConfig == null) {
             return null;
         }
-        return serverConfig.getFeatureConfig(feature);
+        return guildConfig.getFeatureConfig(feature);
     }
 
     @CheckReturnValue
     protected static boolean usesFeature(@NotNull Guild guild, @NotNull HopperBotFeatures feature) {
-        final HopperBotServerConfig serverConfig = getServerConfig(guild.getIdLong());
-        if (serverConfig == null) {
+        final HopperBotGuildConfig guildConfig = getGuildConfig(guild.getIdLong());
+        if (guildConfig == null) {
             return false;
         }
-        return serverConfig.usesFeature(feature);
+        return guildConfig.usesFeature(feature);
     }
 
     @NotNull
     @CheckReturnValue
     protected static EmbedBuilder getEmbedBase() {
-        final User botOwnerUser = jda.getUserById(config.getBotOwnerId());
+        final User botOwnerUser = jda.getUserById(config.botOwnerId());
         final EmbedBuilder embedBuilder = new EmbedBuilder();
         if (botOwnerUser == null) {
-            embedBuilder.setFooter("Made by "+config.getBotOwnerFallbackName(),config.getBotOwnerFallbackIcon());
+            embedBuilder.setFooter("Made by "+config.botOwnerFallbackName(),config.botOwnerFallbackIcon());
         } else {
             embedBuilder.setFooter("Made by "+botOwnerUser.getName()+"#"+botOwnerUser.getDiscriminator(),botOwnerUser.getAvatarUrl());
         }

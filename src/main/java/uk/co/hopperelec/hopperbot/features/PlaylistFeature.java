@@ -432,7 +432,7 @@ public final class PlaylistFeature extends HopperBotButtonFeature implements Aud
     }
     private void playSongCommand(@NotNull CommandResponder responder, @NotNull User user, @NotNull String search) {
         final boolean vote;
-        if (user.getIdLong() == getConfig().getBotOwnerId()) {
+        if (user.getIdLong() == getConfig().botOwnerId()) {
             vote = false;
         } else {
             final WhoListening whoListening = onlyUserOrGuildListening(user);

@@ -1,6 +1,7 @@
 package uk.co.hopperelec.hopperbot.commands;
 
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Invite;
 import net.dv8tion.jda.api.events.guild.GuildReadyEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -9,8 +10,9 @@ import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.requests.ErrorResponse;
 import net.dv8tion.jda.api.requests.restaction.CommandListUpdateAction;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import uk.co.hopperelec.hopperbot.HopperBotGuildConfig;
 import uk.co.hopperelec.hopperbot.HopperBotListener;
-import uk.co.hopperelec.hopperbot.HopperBotServerConfig;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -86,29 +88,67 @@ public class HopperBotCommandHandler extends HopperBotListener {
                 });
     }
 
-    @Override
-    public void onGuildReady(@NotNull GuildReadyEvent event) {
-        final HopperBotServerConfig serverConfig = getServerConfig(event.getGuild().getIdLong());
-        if (serverConfig != null) {
-            CommandListUpdateAction commandListUpdateAction = event.getGuild().updateCommands();
-            for (HopperBotCommandFeature feature : features) {
-                if (serverConfig.usesFeature(feature.featureEnum)) {
-                    feature.guilds.add(event.getGuild());
-                    for (HopperBotCommand<?> command : feature.commands) {
+    private void reportInvalidInvite(@NotNull Guild guild, @NotNull String inviteCode) {
+        guild.retrieveInvites().queue(invites -> {
+            Invite.resolve(getJDA(),inviteCode).queue(invite -> {
+                if (!invites.contains(invite)) {
+                    logToGuild("Guild does not use the configured invite code, so invite link shown in `/servers` will be invalid",null,guild);
+                }
+            });
+        });
+    }
+    private void checkIfValidInvite(@NotNull Guild guild, @Nullable String inviteCode) {
+        if (inviteCode != null) {
+            guild.retrieveVanityInvite().queue(vanityInvite -> {
+                if (!vanityInvite.getCode().equals(inviteCode)) {
+                    reportInvalidInvite(guild, inviteCode);
+                }
+            }, error -> {
+                reportInvalidInvite(guild, inviteCode);
+            });
+        }
+    }
+    private void checkIfValidInvite(@NotNull Guild guild) {
+        final HopperBotGuildConfig guildConfig = getGuildConfig(guild);
+        if (guildConfig != null) {
+            checkIfValidInvite(guild,guildConfig.inviteCode());
+        }
+    }
+
+    private void updateGuildCommands(@NotNull Guild guild, @NotNull HopperBotGuildConfig guildConfig) {
+        CommandListUpdateAction commandListUpdateAction = guild.updateCommands();
+        for (HopperBotCommandFeature feature : features) {
+            if (guildConfig.usesFeature(feature.featureEnum)) {
+                feature.guilds.add(guild);
+                for (HopperBotCommand<?> command : feature.commands) {
+                    commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
+                }
+                Set<HopperBotCommand<?>> extraCommands = feature.getExtraCommands(guild,guildConfig);
+                if (extraCommands != null) {
+                    for (HopperBotCommand<?> command : extraCommands) {
                         commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
-                    }
-                    Set<HopperBotCommand<?>> extraCommands = feature.getExtraCommands(event.getGuild(),serverConfig);
-                    if (extraCommands != null) {
-                        for (HopperBotCommand<?> command : extraCommands) {
-                            commandListUpdateAction = commandListUpdateAction.addCommands(command.slashCommand);
-                        }
                     }
                 }
             }
-            commandListUpdateAction.queue(null,new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, error -> {
-                logToGuild("Missing Oauth2 scope 'applications.commands' which is needed to be able to add slash commands to the server. Re-invite the bot using this link: "+
-                        "https://discord.com/api/oauth2/authorize?client_id=769709648092856331&scope=bot%20applications.commands&permissions=8",null,event.getGuild());
-            }));
+        }
+        commandListUpdateAction.queue(null,new ErrorHandler().handle(ErrorResponse.MISSING_ACCESS, error -> {
+            logToGuild("Missing Oauth2 scope 'applications.commands' which is needed to be able to add slash commands to the server. Re-invite the bot using this link: "+
+                    "https://discord.com/api/oauth2/authorize?client_id=769709648092856331&scope=bot%20applications.commands&permissions=8",null,guild);
+        }));
+    }
+    private void updateGuildCommands(@NotNull Guild guild) {
+        final HopperBotGuildConfig guildConfig = getGuildConfig(guild);
+        if (guildConfig != null) {
+            updateGuildCommands(guild,guildConfig);
+        }
+    }
+
+    @Override
+    public void onGuildReady(@NotNull GuildReadyEvent event) {
+        final HopperBotGuildConfig guildConfig = getGuildConfig(event.getGuild().getIdLong());
+        if (guildConfig != null) {
+            checkIfValidInvite(event.getGuild(),guildConfig.inviteCode());
+            updateGuildCommands(event.getGuild(),guildConfig);
         } else {
             logToGuild("Bot is in guild "+event.getGuild().getId()+" which has not been configured",null,event.getGuild());
         }

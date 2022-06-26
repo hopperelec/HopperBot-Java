@@ -1,49 +1,42 @@
 package uk.co.hopperelec.hopperbot;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.EnumSet;
 import java.util.Map;
 
-public final class HopperBotConfig {
-    private HopperBotFeatures[] enabledFeatures;
-    private String logFormat;
-    private Map<Long,HopperBotServerConfig> servers;
-    private long botOwnerId;
-    private String botOwnerFallbackName;
-    private String botOwnerFallbackIcon;
-
-    public HopperBotConfig(HopperBotFeatures[] enabledFeatures, String logFormat, Map<Long,HopperBotServerConfig> servers, long botOwnerId, String botOwnerFallbackName, String botOwnerFallbackIcon) {
-        this.enabledFeatures = enabledFeatures;
-        this.logFormat = logFormat;
-        this.servers = servers;
-        this.botOwnerId = botOwnerId;
-        this.botOwnerFallbackName = botOwnerFallbackName;
-        this.botOwnerFallbackIcon = botOwnerFallbackIcon;
+public record HopperBotConfig(
+        @NotNull ImmutableSet<HopperBotFeatures> enabledFeatures,
+        @NotNull String logFormat,
+        @NotNull ImmutableMap<Long, HopperBotGuildConfig> guilds,
+        long botOwnerId,
+        @NotNull String botOwnerFallbackName,
+        @NotNull String botOwnerFallbackIcon
+) {
+    @JsonCreator
+    public HopperBotConfig(
+            @NotNull @JsonProperty("enabled_features") EnumSet<HopperBotFeatures> enabledFeatures,
+            @NotNull @JsonProperty("log_format") String logFormat,
+            @NotNull @JsonProperty("guilds") @JsonAlias("servers") Map<Long, HopperBotGuildConfig> guilds,
+            @NotNull @JsonProperty("bot_owner") Map<String, JsonNode> botOwner
+    ) {
+        this(
+                Sets.immutableEnumSet(enabledFeatures),
+                logFormat,
+                ImmutableMap.copyOf(guilds),
+                botOwner.get("id").asLong(),
+                botOwner.get("fallback_name").asText(),
+                botOwner.get("fallback_icon").asText()
+        );
         if (!logFormat.contains("{message}")) {
             HopperBot.logger.warn("{message} is missing from the log_format meaning messages will be very arbitrary");
         }
-    }
-    public HopperBotConfig() {}
-
-    public HopperBotFeatures[] getEnabledFeatures() {
-        return enabledFeatures;
-    }
-
-    public String getLogFormat() {
-        return logFormat;
-    }
-
-    public Map<Long,HopperBotServerConfig> getServers() {
-        return servers;
-    }
-
-    public long getBotOwnerId() {
-        return botOwnerId;
-    }
-
-    public String getBotOwnerFallbackName() {
-        return botOwnerFallbackName;
-    }
-
-    public String getBotOwnerFallbackIcon() {
-        return botOwnerFallbackIcon;
     }
 }

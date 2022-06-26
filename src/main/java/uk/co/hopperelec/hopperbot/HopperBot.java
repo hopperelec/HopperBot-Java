@@ -1,6 +1,7 @@
 package uk.co.hopperelec.hopperbot;
 
 import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -63,10 +64,9 @@ public final class HopperBot {
 
     @CheckReturnValue
     private static HopperBotConfig readConfig(@NotNull File configFile) throws HopperBotLoadingException {
+        final ObjectMapper mapper = YAMLMapper.builder().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).build().setPropertyNamingStrategy(SNAKE_CASE);
         try {
-            final YAMLMapper objectMapper = YAMLMapper.builder().enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS).build();
-            objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-            return objectMapper.readValue(configFile, HopperBotConfig.class);
+            return mapper.readValue(configFile, HopperBotConfig.class);
         } catch (IOException e) {
             throw new HopperBotLoadingException("Failed to read config to HopperBotConfig object (maybe incorrectly formatted)",e);
         }
@@ -74,7 +74,7 @@ public final class HopperBot {
 
     private static void initializeFeatures(@NotNull HopperBotConfig config, @NotNull JDABuilder builder) {
         final Set<HopperBotCommandFeature> commandFeatures = new HashSet<>();
-        for (HopperBotFeatures feature : config.getEnabledFeatures()) {
+        for (HopperBotFeatures feature : config.enabledFeatures()) {
             if (feature.handler != null) {
                 try {
                     final HopperBotFeature featureInstance = feature.handler.newInstance(builder);

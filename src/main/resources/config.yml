@@ -12,8 +12,8 @@ enabled_features:
 log_format: '{feature}: {message}'
 bot_owner:
   id: 348083986989449216
-  bot_owner_fallback_name: 'hopperelec#3060'
-  bot_owner_fallback_icon: 'https://www.hopperelec.co.uk/resources/hopper.png?scale=0.2&padding=30&padding-side=-8&type3D=2&shadow=32&fill=100&outline-width=6&bg=1'
+  fallback_name: 'hopperelec#3060'
+  fallback_icon: 'https://www.hopperelec.co.uk/resources/hopper.png?scale=0.2&padding=30&padding-side=-8&type3D=2&shadow=32&fill=100&outline-width=6&bg=1'
 
 servers:
   847254345267281960:
